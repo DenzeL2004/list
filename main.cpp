@@ -14,7 +14,7 @@ int main ()
 
     List list = {};
 
-    if (List_ctor (&list, 10))
+    if (List_ctor (&list, 5))
     {
         Log_report ("ERRROR: Ctor list in main\n");
         Err_report ();
@@ -23,19 +23,16 @@ int main ()
 
     List_dump (&list);
 
-    for (int i = 0; i <= 8; i++){
+    for (int i = 0; i <= 20; i++){
         List_insert (&list, 0, (i+1)*(i+1));
         List_dump (&list);
     }
     
-    
-    for (int i = 1; i <= 6; i++){
+
+    for (int i = 3; i <= 9; i++){
         List_erase (&list, i);
         List_dump (&list);
     }
-
-    List_insert (&list, 0, 10);
-    List_dump (&list);
 
     if (List_dtor (&list))
     {

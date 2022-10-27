@@ -11,8 +11,8 @@
 #include <stdint.h>
 #include <fcntl.h>
 
-#define min(a, b) ((a) < (b) ? (а) : (b))
-#define max(a, b) ((a) > (b) ? (a) : (b))
+#define MIN(a, b) ((a) < (b) ? (а) : (b))
+#define MAX(a, b) ((a) > (b) ? (a) : (b))
 
 /**
  * @def is_error

@@ -9,9 +9,13 @@
 #include "src/Generals_func/generals.h"
 
 
-static int Init_list_data (List *list);
+static int Init_list_data   (List *list);
 
-static int Clear_list_data (List *list);
+static int Clear_list_data  (List *list);
+
+static int List_resize      (List *list);
+
+static int List_recalloc    (List *list, int ver_resize);
 
 static int Init_node (Node *list_elem, elem_t val, int next, int prev);
 
@@ -111,12 +115,12 @@ static int Init_list_data (List *list)
     if (Check_list (list))
         SHUTDOWN_FUNC (return DATA_INIT_ERR);
 
-    Node *list_data = list->data;
+    int Last_used_node = MAX (list->tail_ptr, list->head_ptr);
 
-    for (int ip = list_data->prev + 1; ip < list->capacity; ip++)
-        Init_node (list_data + ip, Poison_val, ip + 1, Identifier_free_cell);
-        
-    Init_node (list_data + list->capacity, Poison_val, Identifier_free_cell, Identifier_free_cell);
+    for (int ip = Last_used_node + 1; ip < list->capacity; ip++) 
+        Init_node (list->data + ip, Poison_val, ip + 1, Identifier_free_cell);
+
+    Init_node (list->data + list->capacity, Poison_val, Identifier_free_cell, Identifier_free_cell);
 
     if (Check_list (list))
         SHUTDOWN_FUNC (return DATA_INIT_ERR);
@@ -133,10 +137,8 @@ static int Clear_list_data (List *list)
     if (Check_list (list))
         SHUTDOWN_FUNC (return DATA_CLEAR_ERR);
 
-    Node *list_data = list->data;
-
     for (int ip = 0; ip <= list->capacity; ip++)
-        Init_node (&list_data[ip], Poison_val, Identifier_free_cell, Identifier_free_cell);
+        Init_node (list->data + ip, Poison_val, Identifier_free_cell, Identifier_free_cell);
 
     if (Check_list (list))
         SHUTDOWN_FUNC (return DATA_CLEAR_ERR);
@@ -165,11 +167,14 @@ int List_insert (List *list, const int ind, const elem_t val)
 
     if (Check_list (list))
         SHUTDOWN_FUNC (return LIST_INSERT_ERR);
-       
-    /*if (Check_resize ())
+    
+    int ver_resize = List_resize (list);
+    if (List_recalloc (list, ver_resize))
     {
-
-    } */
+        Log_report ("Recalloc error\n");
+        Err_report ();
+        return LIST_INSERT_ERR;
+    } 
 
     if (!Check_correct_ind (list, ind) && ind != Dummy_element)
     {
@@ -228,8 +233,6 @@ int List_erase (List *list, const int ind)
 
     if (Check_list (list))
         SHUTDOWN_FUNC (return LIST_ERASE_ERR);    
-    //empty if (list -> nextFree == list -> head) return ListIsEmpty; 
-    //  TODO: recalloc
     
     if (!Check_correct_ind (list, ind))
     {
@@ -245,9 +248,20 @@ int List_erase (List *list, const int ind)
         return LIST_ERASE_ERR;
     }
 
+
     if (list->head_ptr != ind && list->tail_ptr != ind)
         list->is_linearized = 0;
     
+
+    int ver_resize = List_resize (list);
+    if (List_recalloc (list, ver_resize))
+    {
+        Log_report ("Recalloc error\n");
+        Err_report ();
+        return LIST_INSERT_ERR;
+    }
+
+
     int  cur_ptr   = ind;
     int  prev_ptr  = list->data[ind].prev;
     int  next_ptr  = list->data[ind].next;
@@ -265,10 +279,160 @@ int List_erase (List *list, const int ind)
 
     list->size_data--;
 
+    if (list->size_data == 0)
+    {
+        list->is_linearized = 1;
+        if (Init_list_data (list))
+        {
+            Log_report ("List data initialization error\n");
+            Err_report ();
+            return LIST_INSERT_ERR;
+        }
+    }
+
     if (Check_list (list))
         SHUTDOWN_FUNC (return LIST_ERASE_ERR);   
 
     return 0;
+}
+
+//======================================================================================
+
+static int List_resize (List *list)
+{
+    assert (list != nullptr && "list is nullptr");
+
+    if (Check_list (list))
+        SHUTDOWN_FUNC (return LIST_RESIZE_ERR);   
+
+    if (list->capacity / 4  <= list->size_data   && 
+        list->size_data + 1 < list->capacity / 2 && 
+        list->is_linearized == 1)
+    {
+        list->capacity = list->capacity / 2 + 1;
+        return 1;
+    } 
+
+    if (list->capacity == list->size_data + 1)
+    {
+        list->capacity = list->capacity * 2 + 1;
+        return 1;
+    }
+
+    if (Check_list (list))
+        SHUTDOWN_FUNC (return LIST_RESIZE_ERR); 
+
+    return 0;
+}
+
+//======================================================================================
+
+static int List_recalloc (List *list, int resize_status)
+{
+    assert (list != nullptr && "list is nullptr");
+
+    if (Check_list (list))
+        SHUTDOWN_FUNC (return LIST_RECALLOC_ERR);  
+
+    if (resize_status == 0) return 0;
+
+    if (resize_status < 0)
+    {
+        Log_report ("The list is not subject to recalloc\n");
+        Err_report ();
+        return LIST_RECALLOC_ERR;
+    }
+
+    list->data = (Node*) realloc (list->data, list->capacity * sizeof (Node));
+
+    if (Check_nullptr (list->data))
+    {
+        Log_report ("List data is nullptr after use recalloc\n");
+        Err_report ();
+        return ERR_MEMORY_ALLOC;
+    }
+
+
+    if (Init_list_data (list))
+    {
+        Log_report ("List data initialization error\n");
+        Err_report ();
+        return LIST_RECALLOC_ERR;
+    }
+
+    if (Check_list (list))
+        SHUTDOWN_FUNC (return LIST_RECALLOC_ERR); 
+
+    return 0;
+}
+
+//======================================================================================
+
+int List_linearize (List *list)
+{
+    assert (list != nullptr && "list is nullptr\n");
+
+    if (Check_list (list))
+        SHUTDOWN_FUNC (return LIST_LINEARIZE_ERR);
+
+    if (list->is_linearized == 1) 
+        return 0;
+
+    Node* new_data = (Node*) calloc (list->capacity + 1, sizeof (Node));
+
+    if (Check_nullptr (new_data))
+    {
+        Log_report ("Linireze error, new data memory allocation error\n");
+        Err_report ();
+        return ERR_MEMORY_ALLOC;
+    }
+
+    int logical_ind = list->head_ptr;
+
+    Init_node (new_data, Poison_val, 1, list->size_data);
+
+    int counter = 1;
+
+    while (counter <= list->size_data - 1)
+    {
+        Init_node (new_data + counter, 
+                   list->data[logical_ind].val, counter + 1, counter - 1);
+        counter++;
+
+        logical_ind = list->data[logical_ind].next;
+
+        if (logical_ind != 0 && !Check_correct_ind (list, logical_ind))
+        {
+            Log_report ("Incorrect list traversal, logical_ind = %d\n", logical_ind);
+            Err_report ();
+            return LIST_LINEARIZE_ERR;
+        }
+    }
+
+    Init_node (new_data + counter, 
+               list->data[logical_ind].val, Dummy_element, counter - 1);
+
+
+    free (list->data);
+
+    list->data = new_data;
+    if (Init_list_data (list))
+    {
+        Log_report ("List data initialization error\n");
+        Err_report ();
+        return LIST_LINEARIZE_ERR;
+    }
+
+    list->head_ptr = list->data[Dummy_element].next;
+    list->tail_ptr = list->data[Dummy_element].prev;
+
+    list->is_linearized = 1;
+
+
+    if (Check_list (list))
+        SHUTDOWN_FUNC (return LIST_LINEARIZE_ERR);
+
+    return 0;;
 }
 
 //======================================================================================
@@ -307,6 +471,7 @@ int Get_pointer_by_logical_index (const List *list, const int ind)
 
         while (counter < ind)
         {
+            //printf (logical_ind);
             logical_ind = list->data[logical_ind].next;
             counter++;            
         }

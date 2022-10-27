@@ -53,6 +53,11 @@ enum List_func_err
     GET_VAL_ERR             = -12,
 
     CHECK_IND_ERR           = -13,
+
+    LIST_RESIZE_ERR         = -14,    
+    LIST_RECALLOC_ERR       = -15,
+
+    LIST_LINEARIZE_ERR      = -16,
 };
 
 enum List_err
@@ -118,7 +123,7 @@ int List_get_val    (const List *list, const int ind);
 */
 int List_change_val (const List *list, const int ind, const int val);
 
-
+int List_linearize (List *list);
 
 #define List_dump(list)                       \
         List_dump_ (list, LOG_ARGS)
