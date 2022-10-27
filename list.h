@@ -4,7 +4,7 @@
 #include "config_list.h"
 #include "src/log_info/log_def.h"
 
-const int Identifier_free_cell = -1;
+const int Identifier_free_node = -1;
 
 const int Dummy_element = 0;
 
@@ -17,8 +17,9 @@ struct Node
 
 struct List
 {
-    long capacity  = 0;
-    long size_data = 0; 
+    long capacity       = 0;
+    long size_data      = 0; 
+    long cnt_free_nodes = 0;
 
     Node *data = nullptr;
 
@@ -62,15 +63,18 @@ enum List_func_err
 
 enum List_err
 {
-    NEGATIVE_SIZE         = (1 << 0),
-    NEGATIVE_CAPAITY      = (1 << 1),
-    CAPACITY_LOWER_SIZE   = (1 << 2),
+    NEGATIVE_SIZE               = (1 << 0),
+    NEGATIVE_CAPAITY            = (1 << 1),
+    CAPACITY_LOWER_SIZE         = (1 << 2),
 
-    ILLIQUID_FREE_PTR     = (1 << 3),
+    ILLIQUID_FREE_PTR           = (1 << 3),
 
-    DATA_IS_NULLPTR       = (1 << 4),
+    DATA_IS_NULLPTR             = (1 << 4),
 
-    UNCORRECT_LINEARIZED  = (1 << 5),
+    UNCORRECT_LINEARIZED        = (1 << 5),
+
+    DATA_NODE_UNCORRECT         = (1 << 6),
+    DATA_FREE_NODE_UNCORRECT    = (1 << 7),
     
 };
 

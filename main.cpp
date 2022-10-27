@@ -28,6 +28,7 @@ int main ()
         List_dump (&list);
     }
     
+    List_linearize (&list);
 
     for (int i = 3; i <= 9; i++){
         List_erase (&list, i);

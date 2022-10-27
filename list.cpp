@@ -11,8 +11,6 @@
 
 static int Init_list_data   (List *list);
 
-static int Clear_list_data  (List *list);
-
 static int List_resize      (List *list);
 
 static int List_recalloc    (List *list, int ver_resize);
@@ -20,6 +18,10 @@ static int List_recalloc    (List *list, int ver_resize);
 static int Init_node (Node *list_elem, elem_t val, int next, int prev);
 
 static int Check_correct_ind (const List *list, const int ind);
+
+static int List_data_not_free_verifier  (const List *list);
+
+static int List_data_free_verifier      (const List *list);
 
 static uint64_t Check_list (const List *list);
 
@@ -42,10 +44,11 @@ int List_ctor (List *list, long capacity)
     list->head_ptr = Dummy_element;
     list->free_ptr = 1;
 
-     list->is_linearized = 1;
+    list->is_linearized = 1;
 
-    list->size_data = 0;
-    list->capacity  = capacity;
+    list->size_data      = 0;
+    list->capacity       = capacity;
+    list->cnt_free_nodes = 0;
 
     list->data = (Node*) calloc (capacity + 1, sizeof (Node));
 
@@ -81,14 +84,6 @@ int List_dtor (List *list)
     if (Check_list (list))
         SHUTDOWN_FUNC (return LIST_DTOR_ERR);
 
-    if (Clear_list_data (list))
-    {
-        Log_report ("Cleaning date error\n");
-        Err_report ();
-
-        return LIST_DTOR_ERR;
-    }
-
     if (Check_nullptr (list->data))
         Log_report ("Data is nullptr in dtor");
     else    
@@ -98,8 +93,9 @@ int List_dtor (List *list)
     list->head_ptr = Poison_ptr;
     list->free_ptr = Poison_ptr;
 
-    list->size_data    = -1;
-    list->capacity     = -1;
+    list->size_data         = -1;
+    list->capacity          = -1;
+    list->cnt_free_nodes    = -1;
     
     list->is_linearized = -1;
 
@@ -115,33 +111,20 @@ static int Init_list_data (List *list)
     if (Check_list (list))
         SHUTDOWN_FUNC (return DATA_INIT_ERR);
 
+
     int Last_used_node = MAX (list->tail_ptr, list->head_ptr);
 
-    for (int ip = Last_used_node + 1; ip < list->capacity; ip++) 
-        Init_node (list->data + ip, Poison_val, ip + 1, Identifier_free_cell);
 
-    Init_node (list->data + list->capacity, Poison_val, Identifier_free_cell, Identifier_free_cell);
+    for (int ip = Last_used_node + 1; ip < list->capacity; ip++) 
+        Init_node (list->data + ip, Poison_val, ip + 1, Identifier_free_node);
+
+    Init_node (list->data + list->capacity, Poison_val, Identifier_free_node, Identifier_free_node);
+
+
+    list->cnt_free_nodes = list->capacity - list->size_data;
 
     if (Check_list (list))
         SHUTDOWN_FUNC (return DATA_INIT_ERR);
-
-    return 0;
-}
-
-//======================================================================================
-
-static int Clear_list_data (List *list)
-{
-    assert (list != nullptr && "list is nullptr");
-
-    if (Check_list (list))
-        SHUTDOWN_FUNC (return DATA_CLEAR_ERR);
-
-    for (int ip = 0; ip <= list->capacity; ip++)
-        Init_node (list->data + ip, Poison_val, Identifier_free_cell, Identifier_free_cell);
-
-    if (Check_list (list))
-        SHUTDOWN_FUNC (return DATA_CLEAR_ERR);
 
     return 0;
 }
@@ -189,7 +172,7 @@ int List_insert (List *list, const int ind, const elem_t val)
         return LIST_INSERT_ERR;
     }
 
-    if (list->data[ind].prev == Identifier_free_cell)
+    if (list->data[ind].prev == Identifier_free_node)
     {
         Log_report ("There is nothing at thispointer: %d.\n" 
                     "You can only add an element before initialized elements\n", ind);
@@ -218,6 +201,7 @@ int List_insert (List *list, const int ind, const elem_t val)
     list->tail_ptr = list->data[Dummy_element].prev;
 
     list->size_data++;
+    list->cnt_free_nodes--;
 
     if (Check_list (list))
         SHUTDOWN_FUNC (return LIST_INSERT_ERR);
@@ -241,10 +225,10 @@ int List_erase (List *list, const int ind)
     }
 
 
-    if (list->data[ind].prev == Identifier_free_cell)
+    if (list->data[ind].prev == Identifier_free_node)
     {
         Log_report ("There is nothing at thispointer: %d.\n" 
-                    "You cannot free a previously freed cell\n", ind);
+                    "You cannot free a previously freed node\n", ind);
         return LIST_ERASE_ERR;
     }
 
@@ -270,7 +254,7 @@ int List_erase (List *list, const int ind)
     list->data[next_ptr].prev = prev_ptr;
 
     Init_node (list->data + cur_ptr, 
-               Poison_val, list->free_ptr, Identifier_free_cell);
+               Poison_val, list->free_ptr, Identifier_free_node);
 
     list->free_ptr = cur_ptr;
 
@@ -278,17 +262,7 @@ int List_erase (List *list, const int ind)
     list->tail_ptr = list->data[Dummy_element].prev;
 
     list->size_data--;
-
-    if (list->size_data == 0)
-    {
-        list->is_linearized = 1;
-        if (Init_list_data (list))
-        {
-            Log_report ("List data initialization error\n");
-            Err_report ();
-            return LIST_INSERT_ERR;
-        }
-    }
+    list->cnt_free_nodes++;
 
     if (Check_list (list))
         SHUTDOWN_FUNC (return LIST_ERASE_ERR);   
@@ -343,7 +317,7 @@ static int List_recalloc (List *list, int resize_status)
         return LIST_RECALLOC_ERR;
     }
 
-    list->data = (Node*) realloc (list->data, list->capacity * sizeof (Node));
+    list->data = (Node*) realloc (list->data, (list->capacity + 1) * sizeof (Node));
 
     if (Check_nullptr (list->data))
     {
@@ -351,7 +325,6 @@ static int List_recalloc (List *list, int resize_status)
         Err_report ();
         return ERR_MEMORY_ALLOC;
     }
-
 
     if (Init_list_data (list))
     {
@@ -415,6 +388,8 @@ int List_linearize (List *list)
 
     free (list->data);
 
+    list->cnt_free_nodes = 0;
+
     list->data = new_data;
     if (Init_list_data (list))
     {
@@ -445,7 +420,7 @@ int Get_pointer_by_logical_index (const List *list, const int ind)
         SHUTDOWN_FUNC (return GET_LOGICAL_PTR_ERR);   
 
     if (!Check_correct_ind (list, ind) && 
-         list->data[ind].prev != Identifier_free_cell)
+         list->data[ind].prev != Identifier_free_node)
     {
         Log_report ("Uncorrect ind = %d\n", ind);
         return GET_LOGICAL_PTR_ERR;
@@ -471,8 +446,7 @@ int Get_pointer_by_logical_index (const List *list, const int ind)
 
         while (counter < ind)
         {
-            //printf (logical_ind);
-            logical_ind = list->data[logical_ind].next;
+           logical_ind = list->data[logical_ind].next;
             counter++;            
         }
         
@@ -551,6 +525,61 @@ static int Check_correct_ind (const List *list, const int ind)
 
 //======================================================================================
 
+static int List_data_not_free_verifier (const List *list)
+{
+    assert (list != nullptr && "list is nullptr");
+
+    if (Check_nullptr (list->data))
+        return 1;
+
+    int logical_ind = Dummy_element;
+    int counter = 0;
+        
+    while (counter <= list->size_data)
+    {
+        if (logical_ind < 0) return 1;
+
+        if (list->data[logical_ind].prev == Identifier_free_node) return 1;
+
+        if (logical_ind != Dummy_element && list->data[logical_ind].val == Poison_val) return 1;
+        
+        logical_ind = list->data[logical_ind].next;
+        counter++;            
+    }
+
+    return 0;
+}
+
+//======================================================================================
+
+static int List_data_free_verifier (const List *list)
+{
+    assert (list != nullptr && "list is nullptr");
+
+    if (Check_nullptr (list->data))
+        return 1;
+
+    int logical_ind = list->free_ptr;
+    int counter = 1;
+        
+    while (counter <= list->cnt_free_nodes)
+    {
+        if (logical_ind < 0) return 1;
+        
+        if (list->data[logical_ind].prev != Identifier_free_node) return 1;
+
+        if (list->data[logical_ind].val != Poison_val) return 1;
+
+        
+        logical_ind = list->data[logical_ind].next;
+        counter++;            
+    }
+
+    return 0;
+}
+
+//======================================================================================
+
 int List_dump_ (const List *list,
                 const char* file_name, const char* func_name, int line)
 {
@@ -579,8 +608,9 @@ int List_dump_ (const List *list,
 
     fprintf (fp_logs, "List pointer to data is |%p|\n\n", (char*) list->data);
 
-    fprintf (fp_logs, "List size_data = %ld\n", list->size_data);
-    fprintf (fp_logs, "List capacity  = %ld\n", list->capacity);
+    fprintf (fp_logs, "list size_data = %ld\n",      list->size_data);
+    fprintf (fp_logs, "list capacity  = %ld\n",      list->capacity);
+    fprintf (fp_logs, "list cnt_free_nodes = %ld\n", list->cnt_free_nodes);
 
     fprintf (fp_logs, "\n");
     
@@ -639,6 +669,18 @@ static uint64_t Check_list (const List *list)
         list->free_ptr == Poison_ptr      )   err |= ILLIQUID_FREE_PTR;
 
     if ((list->is_linearized != 0) && (list->is_linearized != 1)) err |= UNCORRECT_LINEARIZED; 
+
+    #ifdef LIST_DATA_NODE_VER
+
+        if (List_data_not_free_verifier (list))   err |= DATA_NODE_UNCORRECT;
+    
+    #endif
+
+    #ifdef LIST_DATA_FREE_NODE_VER
+
+        if (List_data_free_verifier (list))       err |= DATA_FREE_NODE_UNCORRECT;
+    
+    #endif
 
     return err;
 }

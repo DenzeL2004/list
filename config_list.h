@@ -6,20 +6,17 @@
 typedef int elem_t;
 
 
-const elem_t Poison_val = 404;
+const elem_t Poison_val = 404;  //<- In free nodes is written
 
-const int Poison_ptr  = -126;
+const int Poison_ptr  = -126;   //<- Written to a pointer when the list is cleared
 
-#define USE_LOG         //<- connect when we use logs
-
-#define DEBUG           //<- Use of protection
-
-#ifdef DEBUG
+#define USE_LOG                 //<- connect when we use logs
 
 
-#endif
+#define LIST_DATA_NODE_VER      //<- Checking non-free list nodes for correct transitions and values
 
+#define LIST_DATA_FREE_NODE_VER //<- Checking free list nodes for correct transitions and values
 
-#define USE_TYPE "d"               //<- specifier character to print elem
+#define USE_TYPE "d"            //<- specifier character to print elem
 
 #endif  //endif _LIST_CONFIG_H_
