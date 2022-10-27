@@ -24,7 +24,7 @@ int main ()
     List_dump (&list);
 
     for (int i = 0; i <= 8; i++){
-        List_insert (&list, i, (i+1)*(i+1));
+        List_insert (&list, 0, (i+1)*(i+1));
         List_dump (&list);
     }
     

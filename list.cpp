@@ -173,12 +173,10 @@ int List_insert (List *list, const int ind, const elem_t val)
 
     if (!Check_correct_ind (list, ind) && ind != Dummy_element)
     {
-        Log_report ("Uncorrevt ind\n");
+        Log_report ("Uncorrect ind = %d\n", ind);
         return LIST_INSERT_ERR;
     }
-    
-    if (list->head_ptr != ind && list->tail_ptr != ind)
-        list->is_linearized = 0;
+
     
     if (list->free_ptr == Dummy_element)
     {
@@ -193,8 +191,10 @@ int List_insert (List *list, const int ind, const elem_t val)
         return LIST_INSERT_ERR;
     }
 
-    if (list->head_ptr < ind && list->tail_ptr > ind)
+        
+    if (list->head_ptr != ind && list->tail_ptr != ind)
         list->is_linearized = 0;
+
     
     int  prev_ptr      = ind;
     int  cur_free_ptr  = list->free_ptr;
@@ -233,13 +233,9 @@ int List_erase (List *list, const int ind)
     
     if (!Check_correct_ind (list, ind))
     {
-        Log_report ("Uncorrevt ind.\nind = %d\n", ind);
+        Log_report ("Uncorrect ind = %d\n", ind);
         return LIST_ERASE_ERR;
     }
-
-
-    if (list->head_ptr != ind && list->tail_ptr != ind)
-        list->is_linearized = 0;
 
 
     if (list->data[ind].prev == Identifier_free_cell)
@@ -248,6 +244,9 @@ int List_erase (List *list, const int ind)
                     "You cannot free a previously freed cell\n", ind);
         return LIST_ERASE_ERR;
     }
+
+    if (list->head_ptr != ind && list->tail_ptr != ind)
+        list->is_linearized = 0;
     
     int  cur_ptr   = ind;
     int  prev_ptr  = list->data[ind].prev;
@@ -284,7 +283,7 @@ int Get_pointer_by_logical_index (const List *list, const int ind)
     if (!Check_correct_ind (list, ind) && 
          list->data[ind].prev != Identifier_free_cell)
     {
-        Log_report ("Uncorrevt ind.\nind = %d\n", ind);
+        Log_report ("Uncorrect ind = %d\n", ind);
         return GET_LOGICAL_PTR_ERR;
     }
 
@@ -330,7 +329,7 @@ int List_get_val (const List *list, const int ind)
 
     if (!Check_correct_ind (list, ind))
     {
-        Log_report ("Uncorrevt ind.\nind = %d\n", ind);
+        Log_report ("Uncorrect ind = %d\n", ind);
         return GET_VAL_ERR;
     }
 
@@ -350,7 +349,7 @@ int List_change_val (const List *list, const int ind, const elem_t val)
 
     if (!Check_correct_ind (list, ind))
     {
-        Log_report ("Uncorrevt ind.\nind = %d\n", ind);
+        Log_report ("Uncorrect ind = %d\n", ind);
         return Poison_val;
     }
 
@@ -371,29 +370,14 @@ static int Check_correct_ind (const List *list, const int ind)
     if (Check_list (list))
         SHUTDOWN_FUNC (return CHECK_IND_ERR); 
 
-    if (ind < 0)
-    {
-        Log_report ("You've reached a negative pointer.\nind = %d\n", ind);
-        return 0;
-    }
+    if (ind < 0) return 0;
 
-    if (ind == 0)
-    {
-        Log_report ("Attempt to remove dummy element.\nind = %d\n", ind);
-        return 0;
-    }
+    if (ind == 0) return 0;
 
-    if (ind > list->capacity)
-    {
-        Log_report ("Accessing unallocated memory.\nind = %d\n", ind);
-        return 0;
-    }
+    if (ind > list->capacity) return 0;
 
-    if (list->data[ind].val == Poison_val)
-    {
-        Log_report ("Accessing an uninitialized node.\nind = %d\n", ind);
-        return 0;
-    }
+    if (list->data[ind].val == Poison_val) return 0;
+    
 
     //No list re-validation as list items don't change
 
@@ -435,11 +419,16 @@ int List_dump_ (const List *list,
 
     fprintf (fp_logs, "\n");
     
+    fprintf (fp_logs, "list head_ptr = %d\n", list->head_ptr);
+    fprintf (fp_logs, "list tail_ptr = %d\n", list->tail_ptr);
     fprintf (fp_logs, "list free_ptr = %d\n", list->free_ptr);
 
     fprintf (fp_logs, "\n");
 
     fprintf (fp_logs, "list is_linearized = %d\n", list->is_linearized);
+
+    fprintf (fp_logs, "\n");
+
 
     for (int it = 0; it <= list->capacity; it++)
         fprintf (fp_logs, "%5d", it);
