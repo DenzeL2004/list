@@ -8,6 +8,8 @@ const int Identifier_free_node = -1;
 
 const int Dummy_element = 0;
 
+const int Max_comand_buffer = 100;
+
 struct Node
 {
     elem_t val = 0;
@@ -59,6 +61,8 @@ enum List_func_err
     LIST_RECALLOC_ERR       = -15,
 
     LIST_LINEARIZE_ERR      = -16,
+    
+    LIST_DRAW_GRAPH_ERR     = -17,
 };
 
 enum List_err
@@ -93,7 +97,11 @@ int List_dtor (List *list);
  * @param [in] val The value of the added node
  * @return If a vertex has been added, it returns the Physical Pointer where the element is located, otherwise a negative number
 */
-int List_insert (List *list, const int ind, const elem_t val);
+int List_insert_befor_ind (List *list, const int ind, const elem_t val);
+
+int List_insert_front     (List *list, const elem_t val);
+
+int List_insert_back      (List *list, const elem_t val);
 
 
 /** 

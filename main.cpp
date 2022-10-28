@@ -24,16 +24,21 @@ int main ()
     List_dump (&list);
 
     for (int i = 0; i <= 20; i++){
-        List_insert (&list, 0, (i+1)*(i+1));
-        List_dump (&list);
+        List_insert_front (&list, (i+1)*(i+1));
+        //List_dump (&list);
     }
     
+    List_dump (&list);
+
     List_linearize (&list);
 
-    for (int i = 3; i <= 9; i++){
+    List_dump (&list);
+
+    for (int i = 21; i >= 4; i--){
         List_erase (&list, i);
-        List_dump (&list);
     }
+
+    List_dump (&list);
 
     if (List_dtor (&list))
     {

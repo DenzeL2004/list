@@ -11,7 +11,7 @@ static FILE *fp_logs = stderr;
 
 int Open_logs_file ()
 {    
-    fp_logs = Open_file_ptr ("logs_info.txt", "a");
+    fp_logs = Open_file_ptr ("log_info.html", "a");
 
     if (!fp_logs)
     {
@@ -19,9 +19,11 @@ int Open_logs_file ()
         return 0;
     }
 
-    time_t seconds = time (NULL)  + 3 * 60* 60;;   
+    fprintf (fp_logs, "<pre>\n");
 
     fprintf (fp_logs, "\n----------------------------------------------------\n");
+
+    time_t seconds = time (NULL)  + 3 * 60* 60;
     fprintf (fp_logs, "Time open logs file: %s\n\n", asctime(gmtime(&seconds)));
 
     return 0;
@@ -31,7 +33,7 @@ int Open_logs_file ()
 
 int Log_report_ (const char* file_name, const char* func_name, int line, const char *format, ...) 
 { 
-    fprintf (fp_logs, "=================================================\n\n");
+    fprintf (fp_logs, "==========================================================\n\n");
 
     fprintf (fp_logs, "SHORT REFERENCE:\n");
 
@@ -47,7 +49,7 @@ int Log_report_ (const char* file_name, const char* func_name, int line, const c
     vfprintf(fp_logs, format, args);
     va_end(args);
 
-    fprintf (fp_logs, "=================================================\n\n\n");
+    fprintf (fp_logs, "==========================================================\n\n\n");
 
     return 0;                                                       
 }

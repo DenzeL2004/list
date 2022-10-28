@@ -26,6 +26,12 @@ static int List_data_free_verifier      (const List *list);
 static uint64_t Check_list (const List *list);
 
 
+static int List_draw_graph (const List *list);
+
+
+static int Cnt_graphs = 0;      //<-To display the current list view
+
+
 #define SHUTDOWN_FUNC(...)              \
     {                                   \
         List_dump (list);               \
@@ -144,7 +150,7 @@ static int Init_node (Node *list_elem, elem_t val, int next, int prev)
 
 //======================================================================================
 
-int List_insert (List *list, const int ind, const elem_t val) 
+int List_insert_befor_ind (List *list, const int ind, const elem_t val) 
 {
     assert (list != nullptr && "list is nullptr");
 
@@ -185,6 +191,94 @@ int List_insert (List *list, const int ind, const elem_t val)
 
     
     int  prev_ptr      = ind;
+    int  cur_free_ptr  = list->free_ptr;
+
+    list->free_ptr = list->data[cur_free_ptr].next;  
+    
+    Init_node (list->data + cur_free_ptr, 
+               val, list->data[prev_ptr].next, prev_ptr);
+    
+    int next_ptr = list->data[cur_free_ptr].next;
+
+    list->data[next_ptr].prev = cur_free_ptr;
+    list->data[prev_ptr].next = cur_free_ptr;
+    
+    list->head_ptr = list->data[Dummy_element].next;
+    list->tail_ptr = list->data[Dummy_element].prev;
+
+    list->size_data++;
+    list->cnt_free_nodes--;
+
+    if (Check_list (list))
+        SHUTDOWN_FUNC (return LIST_INSERT_ERR);
+
+    return cur_free_ptr;
+}
+
+//======================================================================================
+
+int List_insert_front (List *list, const elem_t val) 
+{
+    assert (list != nullptr && "list is nullptr");
+
+    if (Check_list (list))
+        SHUTDOWN_FUNC (return LIST_INSERT_ERR);
+    
+    int ver_resize = List_resize (list);
+    if (List_recalloc (list, ver_resize))
+    {
+        Log_report ("Recalloc error\n");
+        Err_report ();
+        return LIST_INSERT_ERR;
+    } 
+        
+    if (list->size_data != 0)
+        list->is_linearized = 0;
+
+    
+    int  prev_ptr      = Dummy_element;
+    int  cur_free_ptr  = list->free_ptr;
+
+    list->free_ptr = list->data[cur_free_ptr].next;  
+    
+    Init_node (list->data + cur_free_ptr, 
+               val, list->data[prev_ptr].next, prev_ptr);
+    
+    int next_ptr = list->data[cur_free_ptr].next;
+
+    list->data[next_ptr].prev = cur_free_ptr;
+    list->data[prev_ptr].next = cur_free_ptr;
+    
+    list->head_ptr = list->data[Dummy_element].next;
+    list->tail_ptr = list->data[Dummy_element].prev;
+
+    list->size_data++;
+    list->cnt_free_nodes--;
+
+    if (Check_list (list))
+        SHUTDOWN_FUNC (return LIST_INSERT_ERR);
+
+    return cur_free_ptr;
+}
+
+//======================================================================================
+
+int List_insert_back (List *list, const elem_t val) 
+{
+    assert (list != nullptr && "list is nullptr");
+
+    if (Check_list (list))
+        SHUTDOWN_FUNC (return LIST_INSERT_ERR);
+    
+    int ver_resize = List_resize (list);
+    if (List_recalloc (list, ver_resize))
+    {
+        Log_report ("Recalloc error\n");
+        Err_report ();
+        return LIST_INSERT_ERR;
+    } 
+    
+    int  prev_ptr      = list->tail_ptr;
     int  cur_free_ptr  = list->free_ptr;
 
     list->free_ptr = list->data[cur_free_ptr].next;  
@@ -326,6 +420,8 @@ static int List_recalloc (List *list, int resize_status)
         return ERR_MEMORY_ALLOC;
     }
 
+    
+    list->cnt_free_nodes = 0;
     if (Init_list_data (list))
     {
         Log_report ("List data initialization error\n");
@@ -355,7 +451,7 @@ int List_linearize (List *list)
 
     if (Check_nullptr (new_data))
     {
-        Log_report ("Linireze error, new data memory allocation error\n");
+        Log_report ("Linearize error, new data memory allocation error\n");
         Err_report ();
         return ERR_MEMORY_ALLOC;
     }
@@ -622,29 +718,104 @@ int List_dump_ (const List *list,
 
     fprintf (fp_logs, "list is_linearized = %d\n", list->is_linearized);
 
-    fprintf (fp_logs, "\n");
+    fprintf (fp_logs, "\n\n");
 
 
-    for (int it = 0; it <= list->capacity; it++)
-        fprintf (fp_logs, "%5d", it);
-    fprintf (fp_logs, "\n");
-
-    for (int it = 0; it <= list->capacity; it++)
-        fprintf (fp_logs, "%5d", list->data[it].val);
-    fprintf (fp_logs, "\n");
-
-    for (int it = 0; it <= list->capacity; it++)
-        fprintf (fp_logs, "%5d", list->data[it].next);
-    fprintf (fp_logs, "\n");
-
-    for (int it = 0; it <= list->capacity; it++)
-        fprintf (fp_logs, "%5d", list->data[it].prev);
-    fprintf (fp_logs, "\n");
-
-    fprintf (fp_logs, "\n");
+    List_draw_graph (list);
 
     fprintf (fp_logs, "==========================================================\n\n");
 
+    return 0;
+}
+
+//======================================================================================
+
+static int List_draw_graph (const List *list)
+{
+    assert (list != nullptr && "list is nullptr\n");
+
+    FILE *graph = Open_file_ptr ("graph_img/graph.txt", "w");
+    if (Check_nullptr (graph))
+    {
+        Err_report ();
+        return LIST_DRAW_GRAPH_ERR;
+    }
+
+    fprintf (graph, "digraph G{\n");
+    fprintf (graph, "rankdir=LR;\n");
+    fprintf (graph, "splines=spline;\n");
+    fprintf (graph, "{\n");
+
+    if (list->head_ptr >= 0)
+    {
+        fprintf (graph, "node_head [shape = circle, style=filled, color=coral, label=\"HEAD\"];\n");
+        fprintf (graph, "node_head -> node%d\n", list->head_ptr);
+    }
+
+    if (list->tail_ptr >= 0)
+    {
+        fprintf (graph, "node_tail [shape = circle, style=filled, color=lightgreen, label=\"TAIL\"];\n");
+        fprintf (graph, "node_tail -> node%d\n", list->tail_ptr);
+    }
+
+    if (list->free_ptr >= 0)
+    {
+        fprintf (graph, "node_free [shape = circle, style=filled, color=plum1, label=\"FREE\"];\n");
+        fprintf (graph, "node_free -> node%d\n", list->free_ptr);
+    }
+
+    for (int counter = 0; counter <= list->capacity; counter++) 
+    {
+        int next = list->data[counter].next;
+        int prev = list->data[counter].prev;
+
+        fprintf (graph, "node%d [style=filled, shape = record, label =  \"NODE %d | VAL: %d| prev: %d | next: %d}\",", 
+                        counter, counter, list->data[counter].val, prev, next);
+
+        if (prev != -1)
+            fprintf (graph, " fillcolor=lightpink ];\n");
+        else
+            fprintf (graph, " fillcolor=lightskyblue ];\n");
+
+        if (next != -1)
+        {
+            fprintf (graph, "node%d -> node%d[style=filled, fillcolor=yellow];\n", 
+                             counter, next);
+        }
+
+        if (prev != -1)
+        {
+            fprintf (graph, "node%d -> node%d[style=filled, fillcolor=green];\n", 
+                             counter, prev);
+        }
+
+        
+        fprintf (graph, "\n");
+    }
+
+
+    fprintf(graph, "}\n}\n");
+    fclose(graph);
+
+    char command_buffer[Max_comand_buffer] = {0};
+    sprintf(command_buffer, "dot -Tpng graph_img/graph.txt -o graph_img/picture%d.png", Cnt_graphs);
+
+    if (system(command_buffer))
+    {
+        Err_report ();
+        return LIST_DRAW_GRAPH_ERR;
+    }
+
+    FILE *fp_logs = Get_log_file_ptr ();
+    if (Check_nullptr (fp_logs))
+    {
+        Err_report ();
+        return LIST_DRAW_GRAPH_ERR;
+    }
+
+    fprintf (fp_logs, "<img src= graph_img/picture%d.png />\n", Cnt_graphs);
+                                
+    Cnt_graphs++;
     return 0;
 }
 
