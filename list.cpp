@@ -1,6 +1,7 @@
 #include <fcntl.h>
 #include <stdlib.h>
 #include <assert.h>
+#include <stdarg.h>
 #include <stdio.h>
 
 #include "list.h"
@@ -26,18 +27,17 @@ static int List_data_free_verifier      (const List *list);
 static uint64_t Check_list (const List *list);
 
 
-static int List_draw_graph (const List *list);
+static int List_draw_logical_graph (const List *list);
 
 
 static int Cnt_graphs = 0;      //<-To display the current list view
 
 
-#define SHUTDOWN_FUNC(...)              \
-    {                                   \
-        List_dump (list);               \
-        Err_report ();                  \
-                                        \
-        __VA_ARGS__ ;                   \
+#define SHUTDOWN_FUNC(...)                                  \
+    {                                                       \
+        List_dump (list, __VA_ARGS__);                      \
+        Err_report ();                                      \
+                                                            \
     }while (0)
                                     
 //======================================================================================
@@ -45,6 +45,14 @@ static int Cnt_graphs = 0;      //<-To display the current list view
 int List_ctor (List *list, long capacity)
 {
     assert (list != nullptr && "list is nullptr");
+
+    if (capacity <= 0)
+    {
+        Log_report ("Incorrectly entered capacity values: %d\n", capacity);
+        Err_report ();
+
+        return LIST_CTOR_ERR;
+    }
 
     list->tail_ptr = Dummy_element;
     list->head_ptr = Dummy_element;
@@ -88,7 +96,10 @@ int List_dtor (List *list)
     assert (list != nullptr && "list ptr is nullptr");
 
     if (Check_list (list))
-        SHUTDOWN_FUNC (return LIST_DTOR_ERR);
+    {
+        SHUTDOWN_FUNC ("FROM: List_dtor input\n");
+        return LIST_DTOR_ERR;
+    }
 
     if (Check_nullptr (list->data))
         Log_report ("Data is nullptr in dtor");
@@ -115,8 +126,10 @@ static int Init_list_data (List *list)
     assert (list != nullptr && "list is nullptr");
 
     if (Check_list (list))
-        SHUTDOWN_FUNC (return DATA_INIT_ERR);
-
+    {
+        SHUTDOWN_FUNC ("FROM: Init_list_data input\n");
+        return DATA_INIT_ERR;
+    }
 
     int Last_used_node = MAX (list->tail_ptr, list->head_ptr);
 
@@ -130,7 +143,10 @@ static int Init_list_data (List *list)
     list->cnt_free_nodes = list->capacity - list->size_data;
 
     if (Check_list (list))
-        SHUTDOWN_FUNC (return DATA_INIT_ERR);
+    {
+        SHUTDOWN_FUNC ("FROM: Init_list_data exit\n");
+        return DATA_INIT_ERR;
+    }
 
     return 0;
 }
@@ -155,7 +171,11 @@ int List_insert_befor_ind (List *list, const int ind, const elem_t val)
     assert (list != nullptr && "list is nullptr");
 
     if (Check_list (list))
-        SHUTDOWN_FUNC (return LIST_INSERT_ERR);
+    {
+        SHUTDOWN_FUNC ("FROM: List_insert_fbefor_ind input,"
+                        " ind = %d, val = %d\n", ind, val);
+        return LIST_INSERT_ERR;
+    }
     
     int ver_resize = List_resize (list);
     if (List_recalloc (list, ver_resize))
@@ -210,7 +230,11 @@ int List_insert_befor_ind (List *list, const int ind, const elem_t val)
     list->cnt_free_nodes--;
 
     if (Check_list (list))
-        SHUTDOWN_FUNC (return LIST_INSERT_ERR);
+    {
+        SHUTDOWN_FUNC ("FROM: List_insert_fbefor_ind exit,"
+                        " ind = %d, val = %d\n", ind, val);
+        return LIST_INSERT_ERR;
+    }
 
     return cur_free_ptr;
 }
@@ -222,7 +246,10 @@ int List_insert_front (List *list, const elem_t val)
     assert (list != nullptr && "list is nullptr");
 
     if (Check_list (list))
-        SHUTDOWN_FUNC (return LIST_INSERT_ERR);
+    {
+        SHUTDOWN_FUNC ("FROM: List_insert_front input %d\n", val);
+        return LIST_INSERT_ERR;
+    }
     
     int ver_resize = List_resize (list);
     if (List_recalloc (list, ver_resize))
@@ -256,7 +283,10 @@ int List_insert_front (List *list, const elem_t val)
     list->cnt_free_nodes--;
 
     if (Check_list (list))
-        SHUTDOWN_FUNC (return LIST_INSERT_ERR);
+    {
+        SHUTDOWN_FUNC ("FROM: List_insert_front exit %d\n", val);
+        return LIST_INSERT_ERR;
+    }
 
     return cur_free_ptr;
 }
@@ -268,8 +298,11 @@ int List_insert_back (List *list, const elem_t val)
     assert (list != nullptr && "list is nullptr");
 
     if (Check_list (list))
-        SHUTDOWN_FUNC (return LIST_INSERT_ERR);
-    
+    {
+        SHUTDOWN_FUNC ("FROM: List_insert_back input %d\n", val);
+        return LIST_INSERT_ERR;
+    }
+
     int ver_resize = List_resize (list);
     if (List_recalloc (list, ver_resize))
     {
@@ -298,7 +331,10 @@ int List_insert_back (List *list, const elem_t val)
     list->cnt_free_nodes--;
 
     if (Check_list (list))
-        SHUTDOWN_FUNC (return LIST_INSERT_ERR);
+    {
+        SHUTDOWN_FUNC ("FROM: List_insert_back exit %d\n", val);
+        return LIST_INSERT_ERR;
+    }
 
     return cur_free_ptr;
 }
@@ -310,7 +346,10 @@ int List_erase (List *list, const int ind)
     assert (list != nullptr && "list is nullptr");
 
     if (Check_list (list))
-        SHUTDOWN_FUNC (return LIST_ERASE_ERR);    
+    {
+        SHUTDOWN_FUNC ("FROM: List_erase input, ind = %d\n", ind);
+        return LIST_ERASE_ERR;
+    }   
     
     if (!Check_correct_ind (list, ind))
     {
@@ -359,7 +398,10 @@ int List_erase (List *list, const int ind)
     list->cnt_free_nodes++;
 
     if (Check_list (list))
-        SHUTDOWN_FUNC (return LIST_ERASE_ERR);   
+    {
+        SHUTDOWN_FUNC ("FROM: List_erase exit, ind = %d\n", ind);
+        return LIST_ERASE_ERR;
+    }  
 
     return 0;
 }
@@ -371,7 +413,10 @@ static int List_resize (List *list)
     assert (list != nullptr && "list is nullptr");
 
     if (Check_list (list))
-        SHUTDOWN_FUNC (return LIST_RESIZE_ERR);   
+    {
+        SHUTDOWN_FUNC ("FROM: List_resize input\n");
+        return LIST_RESIZE_ERR;
+    }   
 
     if (list->capacity / 4  <= list->size_data   && 
         list->size_data + 1 < list->capacity / 2 && 
@@ -388,7 +433,10 @@ static int List_resize (List *list)
     }
 
     if (Check_list (list))
-        SHUTDOWN_FUNC (return LIST_RESIZE_ERR); 
+    {
+        SHUTDOWN_FUNC ("FROM: List_resize exit\n");
+        return LIST_RESIZE_ERR;
+    }  
 
     return 0;
 }
@@ -400,7 +448,10 @@ static int List_recalloc (List *list, int resize_status)
     assert (list != nullptr && "list is nullptr");
 
     if (Check_list (list))
-        SHUTDOWN_FUNC (return LIST_RECALLOC_ERR);  
+    {
+        SHUTDOWN_FUNC ("FROM: List_recalloc input\n");
+        return LIST_RECALLOC_ERR;
+    } 
 
     if (resize_status == 0) return 0;
 
@@ -430,7 +481,10 @@ static int List_recalloc (List *list, int resize_status)
     }
 
     if (Check_list (list))
-        SHUTDOWN_FUNC (return LIST_RECALLOC_ERR); 
+    {
+        SHUTDOWN_FUNC ("FROM: List_recalloc exit\n");
+        return LIST_RECALLOC_ERR;
+    } 
 
     return 0;
 }
@@ -442,7 +496,10 @@ int List_linearize (List *list)
     assert (list != nullptr && "list is nullptr\n");
 
     if (Check_list (list))
-        SHUTDOWN_FUNC (return LIST_LINEARIZE_ERR);
+    {
+        SHUTDOWN_FUNC ("FROM: List_linearize input\n");
+        return LIST_LINEARIZE_ERR;
+    } 
 
     if (list->is_linearized == 1) 
         return 0;
@@ -487,6 +544,9 @@ int List_linearize (List *list)
     list->cnt_free_nodes = 0;
 
     list->data = new_data;
+    list->head_ptr = list->data[Dummy_element].next;
+    list->tail_ptr = list->data[Dummy_element].prev;
+
     if (Init_list_data (list))
     {
         Log_report ("List data initialization error\n");
@@ -494,14 +554,13 @@ int List_linearize (List *list)
         return LIST_LINEARIZE_ERR;
     }
 
-    list->head_ptr = list->data[Dummy_element].next;
-    list->tail_ptr = list->data[Dummy_element].prev;
-
     list->is_linearized = 1;
 
-
     if (Check_list (list))
-        SHUTDOWN_FUNC (return LIST_LINEARIZE_ERR);
+    {
+        SHUTDOWN_FUNC ("FROM: List_linearize exit\n");
+        return LIST_LINEARIZE_ERR;
+    }
 
     return 0;;
 }
@@ -513,7 +572,10 @@ int Get_pointer_by_logical_index (const List *list, const int ind)
     assert (list != nullptr && "list is nullptr\n");
 
     if (Check_list (list))
-        SHUTDOWN_FUNC (return GET_LOGICAL_PTR_ERR);   
+    {
+        SHUTDOWN_FUNC ("FROM: Get_pointer_by_logical_index intput, ind = %d\n", ind);
+        return GET_LOGICAL_PTR_ERR;
+    }   
 
     if (!Check_correct_ind (list, ind) && 
          list->data[ind].prev != Identifier_free_node)
@@ -538,7 +600,6 @@ int Get_pointer_by_logical_index (const List *list, const int ind)
     {   
         int logical_ind = list->head_ptr;
         int counter = 1;
-        
 
         while (counter < ind)
         {
@@ -560,7 +621,10 @@ int List_get_val (const List *list, const int ind)
     assert (list != nullptr && "list is nullptr");
 
     if (Check_list (list))
-        SHUTDOWN_FUNC (return GET_VAL_ERR); 
+    {
+        SHUTDOWN_FUNC ("FROM: List_get_val input, ind = %d\n", ind);
+        return GET_VAL_ERR; 
+    }
 
     if (!Check_correct_ind (list, ind))
     {
@@ -580,7 +644,11 @@ int List_change_val (const List *list, const int ind, const elem_t val)
     assert (list != nullptr && "list is nullptr");
 
     if (Check_list (list))
-        SHUTDOWN_FUNC (return Poison_val); 
+    {
+        SHUTDOWN_FUNC ("FROM: List_change_val intput,"
+                       " ind = %d, val = %d\n", ind, val);
+        return Poison_val; 
+    } 
 
     if (!Check_correct_ind (list, ind))
     {
@@ -591,7 +659,11 @@ int List_change_val (const List *list, const int ind, const elem_t val)
     list->data[ind].val = val;
 
     if (Check_list (list))
-        SHUTDOWN_FUNC (return Poison_val);
+    {
+        SHUTDOWN_FUNC ("FROM: List_change_val exit,"
+                       " ind = %d, val = %d\n", ind, val);
+        return Poison_val; 
+    }
 
     return 0;
 }
@@ -603,7 +675,10 @@ static int Check_correct_ind (const List *list, const int ind)
     assert (list != nullptr && "list is nullptr");
 
     if (Check_list (list))
-        SHUTDOWN_FUNC (return CHECK_IND_ERR); 
+    {
+        SHUTDOWN_FUNC ("FROM: Check_correct_ind input, ind = %d", ind);
+        return CHECK_IND_ERR; 
+    }
 
     if (ind < 0) return 0;
 
@@ -643,6 +718,8 @@ static int List_data_not_free_verifier (const List *list)
         counter++;            
     }
 
+    if (logical_ind != Dummy_element) return 1;
+
     return 0;
 }
 
@@ -677,7 +754,7 @@ static int List_data_free_verifier (const List *list)
 //======================================================================================
 
 int List_dump_ (const List *list,
-                const char* file_name, const char* func_name, int line)
+                const char* file_name, const char* func_name, int line, const char *format, ...)
 {
     assert (list != nullptr && "list is nullptr\n");
 
@@ -686,6 +763,14 @@ int List_dump_ (const List *list,
     FILE *fp_logs = Get_log_file_ptr ();
 
     fprintf (fp_logs, "=================================================\n\n");
+
+    va_list args = nullptr;
+
+    va_start(args, format);
+    fprintf (fp_logs, "<h2>");
+    vfprintf(fp_logs, format, args);
+    fprintf (fp_logs, "</h2>");
+    va_end(args);
 
     fprintf (fp_logs, "REFERENCE:\n");
 
@@ -721,7 +806,7 @@ int List_dump_ (const List *list,
     fprintf (fp_logs, "\n\n");
 
 
-    List_draw_graph (list);
+    List_draw_logical_graph (list);
 
     fprintf (fp_logs, "==========================================================\n\n");
 
@@ -730,7 +815,7 @@ int List_dump_ (const List *list,
 
 //======================================================================================
 
-static int List_draw_graph (const List *list)
+static int List_draw_logical_graph (const List *list)
 {
     assert (list != nullptr && "list is nullptr\n");
 
@@ -835,19 +920,23 @@ static uint64_t Check_list (const List *list)
 
     if (Check_nullptr (list->data))           err |= DATA_IS_NULLPTR;
 
+    if (list->head_ptr == Poison_ptr                     ||
+        list->head_ptr < 0                               ||  
+        list->data[list->tail_ptr].next != Dummy_element   ) err |= ILLIQUID_HEAD_PTR;
+
+    if (list->tail_ptr == Poison_ptr                     ||
+        list->tail_ptr < 0                               ||  
+        list->data[list->tail_ptr].next != Dummy_element   ) err |= ILLIQUID_TAIL_PTR;
+
     if (list->free_ptr <  0             || 
         list->free_ptr > list->capacity ||  
-        list->free_ptr == Poison_ptr      )   err |= ILLIQUID_FREE_PTR;
+        list->free_ptr == Poison_ptr      ) err |= ILLIQUID_FREE_PTR;
 
     if ((list->is_linearized != 0) && (list->is_linearized != 1)) err |= UNCORRECT_LINEARIZED; 
 
-    #ifdef LIST_DATA_NODE_VER
+    #ifdef LIST_DATA_CHECK
 
         if (List_data_not_free_verifier (list))   err |= DATA_NODE_UNCORRECT;
-    
-    #endif
-
-    #ifdef LIST_DATA_FREE_NODE_VER
 
         if (List_data_free_verifier (list))       err |= DATA_FREE_NODE_UNCORRECT;
     

@@ -2,6 +2,7 @@
 
 #include "list.h"
 #include "src/log_info/log_errors.h"
+#include "src/Generals_func/generals.h"
 
 int main ()
 {
@@ -21,24 +22,23 @@ int main ()
         return -1;
     }
 
-    List_dump (&list);
+    List_dump (&list, "FROM MAIN");
 
     for (int i = 0; i <= 20; i++){
         List_insert_front (&list, (i+1)*(i+1));
-        //List_dump (&list);
     }
     
-    List_dump (&list);
+    List_dump (&list, "FROM MAIN");
 
     List_linearize (&list);
 
-    List_dump (&list);
+    List_dump (&list, "FROM MAIN");
 
     for (int i = 21; i >= 4; i--){
         List_erase (&list, i);
     }
 
-    List_dump (&list);
+    List_dump (&list, "FROM MAIN");
 
     if (List_dtor (&list))
     {
@@ -46,7 +46,7 @@ int main ()
         Err_report ();
         return -1;
     }
-
+    
     #ifdef USE_LOG
         
         if (Close_logs_file ())

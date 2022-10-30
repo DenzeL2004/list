@@ -79,6 +79,9 @@ enum List_err
 
     DATA_NODE_UNCORRECT         = (1 << 6),
     DATA_FREE_NODE_UNCORRECT    = (1 << 7),
+
+    ILLIQUID_HEAD_PTR           = (1 << 8),
+    ILLIQUID_TAIL_PTR           = (1 << 9),
     
 };
 
@@ -137,9 +140,9 @@ int List_change_val (const List *list, const int ind, const int val);
 
 int List_linearize (List *list);
 
-#define List_dump(list)                       \
-        List_dump_ (list, LOG_ARGS)
+#define List_dump(list, ...)                       \
+        List_dump_ (list, LOG_ARGS, __VA_ARGS__)
 
-int List_dump_ (const List *list, LOG_PARAMETS);
+int List_dump_ (const List *list, LOG_PARAMETS, const char *format, ...);
 
 #endif  //#endif _LIST_H_

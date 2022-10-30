@@ -13,9 +13,7 @@ const int Poison_ptr  = -126;   //<- Written to a pointer when the list is clear
 #define USE_LOG                 //<- connect when we use logs
 
 
-#define LIST_DATA_NODE_VER      //<- Checking non-free list nodes for correct transitions and values
-
-#define LIST_DATA_FREE_NODE_VER //<- Checking free list nodes for correct transitions and values
+#define LIST_DATA_CHECK      //<- Checking non-free list nodes for correct transitions and values
 
 #define USE_TYPE "d"            //<- specifier character to print elem
 

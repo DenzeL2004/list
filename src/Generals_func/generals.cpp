@@ -69,7 +69,7 @@ int Bin_represent(FILE *fpout, size_t elem, uint64_t size_elem)
 {
 	assert (fpout != nullptr && "fpot is nullptr");
 	
-    for (uint64_t num_bit = size_elem; num_bit > 0; --num_bit) {
+    for (uint64_t num_bit = size_elem * 4; num_bit > 0; num_bit--) {
         fprintf(fpout, "%d", (elem & (1 << (num_bit-1))) ? 1 : 0);
     }
 
