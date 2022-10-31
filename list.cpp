@@ -97,12 +97,12 @@ int List_dtor (List *list)
 
     if (Check_list (list))
     {
-        SHUTDOWN_FUNC ("FROM: List_dtor input\n");
+        SHUTDOWN_FUNC ("ENTRY\nFROM: List_dtor\n");
         return LIST_DTOR_ERR;
     }
 
     if (Check_nullptr (list->data))
-        Log_report ("Data is nullptr in dtor");
+        Log_report ("Data is nullptr in dtor\n");
     else    
         free (list->data);
 
@@ -127,7 +127,7 @@ static int Init_list_data (List *list)
 
     if (Check_list (list))
     {
-        SHUTDOWN_FUNC ("FROM: Init_list_data input\n");
+        SHUTDOWN_FUNC ("ENTRY\nFROM: Init_list_data\n");
         return DATA_INIT_ERR;
     }
 
@@ -144,7 +144,7 @@ static int Init_list_data (List *list)
 
     if (Check_list (list))
     {
-        SHUTDOWN_FUNC ("FROM: Init_list_data exit\n");
+        SHUTDOWN_FUNC ("EXIT\nFROM: Init_list_data\n");
         return DATA_INIT_ERR;
     }
 
@@ -172,7 +172,7 @@ int List_insert_befor_ind (List *list, const int ind, const elem_t val)
 
     if (Check_list (list))
     {
-        SHUTDOWN_FUNC ("FROM: List_insert_fbefor_ind input,"
+        SHUTDOWN_FUNC ("ENTRY\nFROM: List_insert_befor_ind,"
                         " ind = %d, val = %d\n", ind, val);
         return LIST_INSERT_ERR;
     }
@@ -187,7 +187,7 @@ int List_insert_befor_ind (List *list, const int ind, const elem_t val)
 
     if (!Check_correct_ind (list, ind) && ind != Dummy_element)
     {
-        Log_report ("Uncorrect ind = %d\n", ind);
+        Log_report ("Incorrect ind = %d\n", ind);
         return LIST_INSERT_ERR;
     }
 
@@ -200,7 +200,7 @@ int List_insert_befor_ind (List *list, const int ind, const elem_t val)
 
     if (list->data[ind].prev == Identifier_free_node)
     {
-        Log_report ("There is nothing at thispointer: %d.\n" 
+        Log_report ("There is nothing at this pointer: %d.\n" 
                     "You can only add an element before initialized elements\n", ind);
         return LIST_INSERT_ERR;
     }
@@ -231,7 +231,7 @@ int List_insert_befor_ind (List *list, const int ind, const elem_t val)
 
     if (Check_list (list))
     {
-        SHUTDOWN_FUNC ("FROM: List_insert_fbefor_ind exit,"
+        SHUTDOWN_FUNC ("EXIT\nFROM: List_insert_befor_ind,"
                         " ind = %d, val = %d\n", ind, val);
         return LIST_INSERT_ERR;
     }
@@ -247,7 +247,7 @@ int List_insert_front (List *list, const elem_t val)
 
     if (Check_list (list))
     {
-        SHUTDOWN_FUNC ("FROM: List_insert_front input %d\n", val);
+        SHUTDOWN_FUNC ("ENTRY\nFROM: List_insert_front %d\n", val);
         return LIST_INSERT_ERR;
     }
     
@@ -284,7 +284,7 @@ int List_insert_front (List *list, const elem_t val)
 
     if (Check_list (list))
     {
-        SHUTDOWN_FUNC ("FROM: List_insert_front exit %d\n", val);
+        SHUTDOWN_FUNC ("EXIT\nFROM: List_insert_front %d\n", val);
         return LIST_INSERT_ERR;
     }
 
@@ -299,7 +299,7 @@ int List_insert_back (List *list, const elem_t val)
 
     if (Check_list (list))
     {
-        SHUTDOWN_FUNC ("FROM: List_insert_back input %d\n", val);
+        SHUTDOWN_FUNC ("ENTRY\nFROM: List_insert_back %d\n", val);
         return LIST_INSERT_ERR;
     }
 
@@ -332,7 +332,7 @@ int List_insert_back (List *list, const elem_t val)
 
     if (Check_list (list))
     {
-        SHUTDOWN_FUNC ("FROM: List_insert_back exit %d\n", val);
+        SHUTDOWN_FUNC ("EXIT\nFROM: List_insert_back %d\n", val);
         return LIST_INSERT_ERR;
     }
 
@@ -347,20 +347,20 @@ int List_erase (List *list, const int ind)
 
     if (Check_list (list))
     {
-        SHUTDOWN_FUNC ("FROM: List_erase input, ind = %d\n", ind);
+        SHUTDOWN_FUNC ("ENTRY\nFROM: List_erase, ind = %d\n", ind);
         return LIST_ERASE_ERR;
     }   
     
     if (!Check_correct_ind (list, ind))
     {
-        Log_report ("Uncorrect ind = %d\n", ind);
+        Log_report ("Incorrect ind = %d\n", ind);
         return LIST_ERASE_ERR;
     }
 
 
     if (list->data[ind].prev == Identifier_free_node)
     {
-        Log_report ("There is nothing at thispointer: %d.\n" 
+        Log_report ("There is nothing at this pointer: %d.\n" 
                     "You cannot free a previously freed node\n", ind);
         return LIST_ERASE_ERR;
     }
@@ -399,7 +399,7 @@ int List_erase (List *list, const int ind)
 
     if (Check_list (list))
     {
-        SHUTDOWN_FUNC ("FROM: List_erase exit, ind = %d\n", ind);
+        SHUTDOWN_FUNC ("EXIT\nFROM: List_erase exit, ind = %d\n", ind);
         return LIST_ERASE_ERR;
     }  
 
@@ -414,7 +414,7 @@ static int List_resize (List *list)
 
     if (Check_list (list))
     {
-        SHUTDOWN_FUNC ("FROM: List_resize input\n");
+        SHUTDOWN_FUNC ("ENTRY\nFROM: List_resize\n");
         return LIST_RESIZE_ERR;
     }   
 
@@ -434,7 +434,7 @@ static int List_resize (List *list)
 
     if (Check_list (list))
     {
-        SHUTDOWN_FUNC ("FROM: List_resize exit\n");
+        SHUTDOWN_FUNC ("EXIT\nFROM: List_resize\n");
         return LIST_RESIZE_ERR;
     }  
 
@@ -449,7 +449,7 @@ static int List_recalloc (List *list, int resize_status)
 
     if (Check_list (list))
     {
-        SHUTDOWN_FUNC ("FROM: List_recalloc input\n");
+        SHUTDOWN_FUNC ("ENTRY\nFROM: List_recalloc\n");
         return LIST_RECALLOC_ERR;
     } 
 
@@ -482,7 +482,7 @@ static int List_recalloc (List *list, int resize_status)
 
     if (Check_list (list))
     {
-        SHUTDOWN_FUNC ("FROM: List_recalloc exit\n");
+        SHUTDOWN_FUNC ("EXIT\nFROM: List_recalloc\n");
         return LIST_RECALLOC_ERR;
     } 
 
@@ -497,7 +497,7 @@ int List_linearize (List *list)
 
     if (Check_list (list))
     {
-        SHUTDOWN_FUNC ("FROM: List_linearize input\n");
+        SHUTDOWN_FUNC ("ENTRY\nFROM: List_linearize\n");
         return LIST_LINEARIZE_ERR;
     } 
 
@@ -558,7 +558,7 @@ int List_linearize (List *list)
 
     if (Check_list (list))
     {
-        SHUTDOWN_FUNC ("FROM: List_linearize exit\n");
+        SHUTDOWN_FUNC ("EXIT\nFROM: List_linearize\n");
         return LIST_LINEARIZE_ERR;
     }
 
@@ -573,14 +573,14 @@ int Get_pointer_by_logical_index (const List *list, const int ind)
 
     if (Check_list (list))
     {
-        SHUTDOWN_FUNC ("FROM: Get_pointer_by_logical_index intput, ind = %d\n", ind);
+        SHUTDOWN_FUNC ("ENTRY\nFROM: Get_pointer_by_logical_index, ind = %d\n", ind);
         return GET_LOGICAL_PTR_ERR;
     }   
 
     if (!Check_correct_ind (list, ind) && 
          list->data[ind].prev != Identifier_free_node)
     {
-        Log_report ("Uncorrect ind = %d\n", ind);
+        Log_report ("Incorrect ind = %d\n", ind);
         return GET_LOGICAL_PTR_ERR;
     }
 
@@ -622,13 +622,13 @@ int List_get_val (const List *list, const int ind)
 
     if (Check_list (list))
     {
-        SHUTDOWN_FUNC ("FROM: List_get_val input, ind = %d\n", ind);
+        SHUTDOWN_FUNC ("ENTRY\nFROM: List_get_val, ind = %d\n", ind);
         return GET_VAL_ERR; 
     }
 
     if (!Check_correct_ind (list, ind))
     {
-        Log_report ("Uncorrect ind = %d\n", ind);
+        Log_report ("Incorrect ind = %d\n", ind);
         return GET_VAL_ERR;
     }
 
@@ -645,14 +645,14 @@ int List_change_val (const List *list, const int ind, const elem_t val)
 
     if (Check_list (list))
     {
-        SHUTDOWN_FUNC ("FROM: List_change_val intput,"
+        SHUTDOWN_FUNC ("ENTRY\nFROM: List_change_val,"
                        " ind = %d, val = %d\n", ind, val);
         return Poison_val; 
     } 
 
     if (!Check_correct_ind (list, ind))
     {
-        Log_report ("Uncorrect ind = %d\n", ind);
+        Log_report ("Incorrect ind = %d\n", ind);
         return Poison_val;
     }
 
@@ -660,7 +660,7 @@ int List_change_val (const List *list, const int ind, const elem_t val)
 
     if (Check_list (list))
     {
-        SHUTDOWN_FUNC ("FROM: List_change_val exit,"
+        SHUTDOWN_FUNC ("EXIT\nFROM: List_change_val,"
                        " ind = %d, val = %d\n", ind, val);
         return Poison_val; 
     }
@@ -676,7 +676,7 @@ static int Check_correct_ind (const List *list, const int ind)
 
     if (Check_list (list))
     {
-        SHUTDOWN_FUNC ("FROM: Check_correct_ind input, ind = %d", ind);
+        SHUTDOWN_FUNC ("ENTRY\nFROM: Check_correct_ind, ind = %d", ind);
         return CHECK_IND_ERR; 
     }
 
@@ -805,8 +805,31 @@ int List_dump_ (const List *list,
 
     fprintf (fp_logs, "\n\n");
 
+    #ifdef GRAPH_DUMP
 
-    List_draw_logical_graph (list);
+        List_draw_logical_graph (list);
+    
+    #else
+
+        for (int it = 0; it <= list->capacity; it++)
+            fprintf (fp_logs, "%5d", it);
+        fprintf (fp_logs, "\n");
+        
+        for (int it = 0; it <= list->capacity; it++)
+            fprintf (fp_logs, "%5d", list->data[it].val);
+        fprintf (fp_logs, "\n");
+        
+        for (int it = 0; it <= list->capacity; it++)
+            fprintf (fp_logs, "%5d", list->data[it].next);
+        fprintf (fp_logs, "\n");
+
+        for (int it = 0; it <= list->capacity; it++)
+            fprintf (fp_logs, "%5d", list->data[it].prev);
+        fprintf (fp_logs, "\n");
+    
+    #endif
+    
+    fprintf (fp_logs, "\n");
 
     fprintf (fp_logs, "==========================================================\n\n");
 
@@ -932,13 +955,13 @@ static uint64_t Check_list (const List *list)
         list->free_ptr > list->capacity ||  
         list->free_ptr == Poison_ptr      ) err |= ILLIQUID_FREE_PTR;
 
-    if ((list->is_linearized != 0) && (list->is_linearized != 1)) err |= UNCORRECT_LINEARIZED; 
+    if ((list->is_linearized != 0) && (list->is_linearized != 1)) err |= INCORRECT_LINEARIZED; 
 
     #ifdef LIST_DATA_CHECK
 
-        if (List_data_not_free_verifier (list))   err |= DATA_NODE_UNCORRECT;
+        if (List_data_not_free_verifier (list))   err |= DATA_NODE_INCORRECT;
 
-        if (List_data_free_verifier (list))       err |= DATA_FREE_NODE_UNCORRECT;
+        if (List_data_free_verifier (list))       err |= DATA_FREE_NODE_INCORRECT;
     
     #endif
 

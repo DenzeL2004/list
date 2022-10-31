@@ -75,10 +75,10 @@ enum List_err
 
     DATA_IS_NULLPTR             = (1 << 4),
 
-    UNCORRECT_LINEARIZED        = (1 << 5),
+    INCORRECT_LINEARIZED        = (1 << 5),
 
-    DATA_NODE_UNCORRECT         = (1 << 6),
-    DATA_FREE_NODE_UNCORRECT    = (1 << 7),
+    DATA_NODE_INCORRECT         = (1 << 6),
+    DATA_FREE_NODE_INCORRECT    = (1 << 7),
 
     ILLIQUID_HEAD_PTR           = (1 << 8),
     ILLIQUID_TAIL_PTR           = (1 << 9),
