@@ -31,6 +31,8 @@ static int List_draw_logical_graph (const List *list);
 
 static void Print_list_variables (const List *list, FILE *fpout);
 
+static void Print_error_value (uint64_t err, FILE *fpout);
+
 #define REPORT(...)                                         \
     {                                                       \
         List_dump (list, __VA_ARGS__);                      \
@@ -787,6 +789,8 @@ int List_dump_ (const List *list,
 
     Print_list_variables (list, fp_logs);
 
+    Print_error_value (err, fp_logs);
+
     #ifdef GRAPH_DUMP
 
         List_draw_logical_graph (list);
@@ -844,6 +848,53 @@ static void Print_list_variables (const List *list, FILE *fpout)
     fprintf (fpout, "</table>\n");
     fprintf (fpout, "</body>\n");
    
+    return;
+}
+
+//======================================================================================
+
+static void Print_error_value (uint64_t err, FILE *fpout)
+{
+    assert (fpout != nullptr && "fpout is nullptr\n");
+
+    if (err & NEGATIVE_SIZE)
+        fprintf (fpout, "Size_data is negative number\n");
+
+    if (err & NEGATIVE_CAPAITY)
+        fprintf (fpout, "Capacity is negative number\n");
+
+
+    if (err & CAPACITY_LOWER_SIZE)
+        fprintf (fpout, "Capacity is lower than size_data\n");
+
+    if (err & DATA_IS_NULLPTR)
+        fprintf (fpout, "Data pointer is nullptr\n");
+
+    if (err & ILLIQUID_HEAD_PTR)
+        fprintf (fpout, "Head pointer is incorrect\n");
+
+    if (err & ILLIQUID_TAIL_PTR)
+        fprintf (fpout, "Tail pointer is incorrect\n");
+
+    if (err & ILLIQUID_TAIL_PTR)
+        fprintf (fpout, "Free pointer is incorrect\n");
+
+    if (err & INCORRECT_LINEARIZED)
+        fprintf (fpout, "Unknown linearize status\n"); 
+
+    #ifdef LIST_DATA_CHECK
+
+        if (err & DATA_NODE_INCORRECT)
+            fprintf (fpout, "Сorrupted not-free nodes\n"); 
+
+
+        if (err & DATA_FREE_NODE_INCORRECT)
+            fprintf (fpout, "Сorrupted free nodes\n"); 
+    
+    #endif
+
+    fprintf (fpout, "\n\n");
+
     return;
 }
 
@@ -910,7 +961,6 @@ static int List_draw_logical_graph (const List *list)
                              counter, prev);
         }
 
-        
         fprintf (graph, "\n");
     }
 
