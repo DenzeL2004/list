@@ -1061,13 +1061,13 @@ static int List_draw_physical_graph (const List *list)
 
         if (next != -1)
         {
-            fprintf (graph, "node%d -> node%d[style=filled, fillcolor=yellow];\n", 
+            fprintf (graph, "node%d -> node%d[style=filled, fillcolor=yellow, weight = 0];\n", 
                              counter, next);
         }
 
         if (prev != -1)
         {
-            fprintf (graph, "node%d -> node%d[style=filled, fillcolor=green];\n", 
+            fprintf (graph, "node%d -> node%d[style=filled, fillcolor=green, weight = 0];\n", 
                              counter, prev);
         }
 
