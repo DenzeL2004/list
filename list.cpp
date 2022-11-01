@@ -27,7 +27,9 @@ static int List_data_free_verifier      (const List *list);
 static uint64_t Check_list (const List *list);
 
 
-static int List_draw_logical_graph (const List *list);
+static int List_draw_logical_graph  (const List *list);
+
+static int List_draw_physical_graph (const List *list);
 
 static void Print_list_variables (const List *list, FILE *fpout);
 
@@ -793,7 +795,13 @@ int List_dump_ (const List *list,
 
     #ifdef GRAPH_DUMP
 
+        fprintf (fp_logs, "Logical graph\n");
         List_draw_logical_graph (list);
+        
+        fprintf (fp_logs, "\n\n");
+
+        fprintf (fp_logs, "Physical graph\n");
+        List_draw_physical_graph (list);
     
     #else
 
@@ -876,7 +884,7 @@ static void Print_error_value (uint64_t err, FILE *fpout)
     if (err & ILLIQUID_TAIL_PTR)
         fprintf (fpout, "Tail pointer is incorrect\n");
 
-    if (err & ILLIQUID_TAIL_PTR)
+    if (err & ILLIQUID_FREE_PTR)
         fprintf (fpout, "Free pointer is incorrect\n");
 
     if (err & INCORRECT_LINEARIZED)
@@ -912,36 +920,41 @@ static int List_draw_logical_graph (const List *list)
     }
 
     fprintf (graph, "digraph G{\n");
-    fprintf (graph, "rankdir=LR;\n");
-    fprintf (graph, "splines=spline;\n");
+    fprintf (graph, "ranksep = 1.2;\n");
+    fprintf (graph, "splines=ortho;\n");
     fprintf (graph, "{\n");
 
-    if (list->head_ptr >= 0)
-    {
-        fprintf (graph, "node_head [shape = circle, style=filled, color=coral, label=\"HEAD\"];\n");
-        fprintf (graph, "node_head -> node%d\n", list->head_ptr);
-    }
+    
+    fprintf (graph, "{rank=min;\n");
 
-    if (list->tail_ptr >= 0)
-    {
-        fprintf (graph, "node_tail [shape = circle, style=filled, color=lightgreen, label=\"TAIL\"];\n");
-        fprintf (graph, "node_tail -> node%d\n", list->tail_ptr);
-    }
+        if (list->head_ptr >= 0)
+            fprintf (graph, "node_head [shape = circle, style=filled, color=coral, label=\"HEAD\"];\n");
 
-    if (list->free_ptr >= 0)
-    {
-        fprintf (graph, "node_free [shape = circle, style=filled, color=plum1, label=\"FREE\"];\n");
-        fprintf (graph, "node_free -> node%d\n", list->free_ptr);
-    }
+
+        if (list->tail_ptr >= 0)
+            fprintf (graph, "node_tail [shape = circle, style=filled, color=lightgreen, label=\"TAIL\"];\n");
+        
+        if (list->free_ptr >= 0)
+            fprintf (graph, "node_free [shape = circle, style=filled, color=plum1, label=\"FREE\"];\n");
+
+    fprintf (graph, "}\n");
+
+    fprintf (graph, "node_head -> node%d\n", list->head_ptr);
+    fprintf (graph, "node_tail -> node%d\n", list->tail_ptr);
+    fprintf (graph, "node_free -> node%d\n", list->free_ptr);
+
+
 
     static int Cnt_graphs = 0;      //<-To display the current list view
+
+    fprintf (graph, "{rank =  same;\n");
 
     for (int counter = 0; counter <= list->capacity; counter++) 
     {
         int next = list->data[counter].next;
         int prev = list->data[counter].prev;
 
-        fprintf (graph, "node%d [style=filled, shape = record, label =  \"NODE %d | VAL: %d| prev: %d | next: %d}\",", 
+        fprintf (graph, "node%d [style=filled, shape = record, label =  \"{NODE %d | VAL: %d| prev: %d | next: %d}}\",", 
                         counter, counter, list->data[counter].val, prev, next);
 
         if (prev != -1)
@@ -965,11 +978,11 @@ static int List_draw_logical_graph (const List *list)
     }
 
 
-    fprintf(graph, "}\n}\n");
+    fprintf(graph, "}\n}\n}\n");
     fclose(graph);
 
     char command_buffer[Max_command_buffer] = {0};
-    sprintf(command_buffer, "dot -Tpng graph_img/graph.txt -o graph_img/picture%d.png", Cnt_graphs);
+    sprintf(command_buffer, "dot -Tpng graph_img/graph.txt -o graph_img/picture_logical%d.png", Cnt_graphs);
 
     if (system(command_buffer))
     {
@@ -984,7 +997,112 @@ static int List_draw_logical_graph (const List *list)
         return LIST_DRAW_GRAPH_ERR;
     }
 
-    fprintf (fp_logs, "<img src= graph_img/picture%d.png />\n", Cnt_graphs);
+    fprintf (fp_logs, "<img src= graph_img/picture_logical%d.png />\n", Cnt_graphs);
+                                
+    Cnt_graphs++;
+    return 0;
+}
+
+//======================================================================================
+
+static int List_draw_physical_graph (const List *list)
+{
+    assert (list != nullptr && "list is nullptr\n");
+
+    FILE *graph = Open_file_ptr ("graph_img/graph.txt", "w");
+    if (Check_nullptr (graph))
+    {
+        Err_report ();
+        return LIST_DRAW_GRAPH_ERR;
+    }
+
+    fprintf (graph, "digraph G{\n");
+    fprintf (graph, "ranksep = 1.2;\n");
+    fprintf (graph, "splines=ortho;\n");
+    fprintf (graph, "{\n");
+
+    
+    fprintf (graph, "{rank=min;\n");
+
+        if (list->head_ptr >= 0)
+            fprintf (graph, "node_head [shape = circle, style=filled, color=coral, label=\"HEAD\"];\n");
+
+
+        if (list->tail_ptr >= 0)
+            fprintf (graph, "node_tail [shape = circle, style=filled, color=lightgreen, label=\"TAIL\"];\n");
+        
+        if (list->free_ptr >= 0)
+            fprintf (graph, "node_free [shape = circle, style=filled, color=plum1, label=\"FREE\"];\n");
+
+    fprintf (graph, "}\n");
+
+    fprintf (graph, "node_head -> node%d\n", list->head_ptr);
+    fprintf (graph, "node_tail -> node%d\n", list->tail_ptr);
+    fprintf (graph, "node_free -> node%d\n", list->free_ptr);
+
+
+
+    static int Cnt_graphs = 0;      //<-To display the current list view
+
+    fprintf (graph, "{rank =  same;\n");
+
+    for (int counter = 0; counter <= list->capacity; counter++) 
+    {
+        int next = list->data[counter].next;
+        int prev = list->data[counter].prev;
+
+        fprintf (graph, "node%d [style=filled, shape = record, label =  \"{NODE %d | VAL: %d| prev: %d | next: %d}}\",", 
+                        counter, counter, list->data[counter].val, prev, next);
+
+        if (prev != -1)
+            fprintf (graph, " fillcolor=lightpink ];\n");
+        else
+            fprintf (graph, " fillcolor=lightskyblue ];\n");
+
+        if (next != -1)
+        {
+            fprintf (graph, "node%d -> node%d[style=filled, fillcolor=yellow];\n", 
+                             counter, next);
+        }
+
+        if (prev != -1)
+        {
+            fprintf (graph, "node%d -> node%d[style=filled, fillcolor=green];\n", 
+                             counter, prev);
+        }
+
+        fprintf (graph, "\n");
+    
+        if (counter != list->capacity)
+        {
+              fprintf (graph, "node%d -> node%d[style = invis, weight = 10000];\n", 
+                             counter, counter + 1);
+        }
+
+        fprintf (graph, "\n"); 
+    }
+
+
+    fprintf(graph, "}\n}\n}\n");
+    fclose(graph);
+
+    char command_buffer[Max_command_buffer] = {0};
+    sprintf(command_buffer, "dot -Tpng graph_img/graph.txt -o graph_img/picture_physical%d.png", Cnt_graphs);
+
+    if (system(command_buffer))
+    {
+        Err_report ();
+        return LIST_DRAW_GRAPH_ERR;
+    }
+
+    FILE *fp_logs = Get_log_file_ptr ();
+    if (Check_nullptr (fp_logs))
+    {
+        Err_report ();
+        return LIST_DRAW_GRAPH_ERR;
+    }
+
+    fprintf (fp_logs, "<img src= graph_img/picture_physical%d.png />\n", Cnt_graphs);
                                 
     Cnt_graphs++;
     return 0;
