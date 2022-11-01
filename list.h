@@ -4,32 +4,23 @@
 #include "config_list.h"
 #include "src/log_info/log_def.h"
 
-const int Identifier_free_node = -1;
-
-const int Dummy_element = 0;
-
 const int Max_command_buffer = 100;
 
 struct Node
 {
-    elem_t val = 0;
-    int next = 0;
-    int prev = 0;
+    elem_t *data = nullptr;
+    Node   *next = nullptr;
+    Node   *prev = nullptr;
 };
 
 struct List
 {
-    long capacity       = 0;
-    long size_data      = 0; 
-    long cnt_free_nodes = 0;
+    long cnt_nodes      = 0; 
 
-    Node *data = nullptr;
+    Node *root = nullptr;
 
-    int head_ptr  = 0;
-    int tail_ptr  = 0;
-    int free_ptr  = 0;
-
-    int is_linearized = 0; 
+    Node *head_ptr  = nullptr;
+    Node *tail_ptr  = nullptr;
 };
 
 
@@ -67,27 +58,19 @@ enum List_func_err
 
 enum List_err
 {
-    NEGATIVE_SIZE               = (1 << 0),
-    NEGATIVE_CAPAITY            = (1 << 1),
-    CAPACITY_LOWER_SIZE         = (1 << 2),
+    NEGATIVE_CNT                = (1 << 0),
 
-    ILLIQUID_FREE_PTR           = (1 << 3),
+    ROOT_IS_NULLPTR             = (1 << 1),
 
-    DATA_IS_NULLPTR             = (1 << 4),
+    DATA_NODE_INCORRECT         = (1 << 2),
 
-    INCORRECT_LINEARIZED        = (1 << 5),
-
-    DATA_NODE_INCORRECT         = (1 << 6),
-    DATA_FREE_NODE_INCORRECT    = (1 << 7),
-
-    ILLIQUID_HEAD_PTR           = (1 << 8),
-    ILLIQUID_TAIL_PTR           = (1 << 9),
+    ILLIQUID_HEAD_PTR           = (1 << 3),
+    ILLIQUID_TAIL_PTR           = (1 << 4),
     
 };
 
 
-
-int List_ctor (List *list, const long capacity);
+int List_ctor (List *list);
 
 int List_dtor (List *list);
 
@@ -95,49 +78,23 @@ int List_dtor (List *list);
 /** 
  * @brief Adds a node to the list
  * @version 1.0.0
- * @param [in] *list Structure List pointer
- * @param [in] ind The index of the memory location before which we want to add a new node. (The node at the given index must be initialized)
- * @param [in] val The value of the added node
- * @return If a vertex has been added, it returns the Physical Pointer where the element is located, otherwise a negative number
+ * @param [in] list Structure List pointer
+ * @param [in] node_ptr The index of the memory location before which we want to add a new node. (The node at the given pointer must be initialized)
+ * @return Returns zero if the node is added, otherwise returns a non-zero number
 */
-int List_insert_befor_ind (List *list, const int ind, const elem_t val);
-
-int List_insert_front     (List *list, const elem_t val);
-
-int List_insert_back      (List *list, const elem_t val);
-
+int List_insert_befor_ptr (List *list, Node *node_ptr);
 
 /** 
- * @brief Removes a node by its index
+ * @brief Removes a node by its pointer
  * @version 1.0.0
- * @param [in] *list Structure List pointer
- * @param [in] ind The pointer by which we will delete the node. (The node at the given index must be initialized)
+ * @param [in] list Structure List pointer
+ * @param [in] node_ptr The pointer by which we will delete the node. (The node at the given pointer must be initialized)
  * @return Returns zero if the node is deleted, otherwise returns a non-zero number
 */
-int List_erase (List *list, const int ind);
+int List_erase (List *list, Node *node_ptr);
 
 
-int Get_ind_by_logical_order (const List *list, const int ind);
-
-
-/**
- * @brief Get value by physical index
- * @param [in] *list Structure List pointer
- * @param [in] ind The physical index by which we will get the node. (The node at the given index must be initialized)
- * @return Returns a poison value if an element referencing error has occurred, otherwise the return value is assumed to be the actual value of the node
-*/
-int List_get_val    (const List *list, const int ind);
-
-/** 
- * @brief Change value by physical index
- * @version 1.0.0
- * @param [in] *list Structure List pointer
- * @param [in] ind The pointer by which we will chage the node. (The node at the given index must be initialized)
- * @return Returns zero if the node is change, otherwise returns a non-zero number
-*/
-int List_change_val (const List *list, const int ind, const int val);
-
-int List_linearize (List *list);
+Node* Get_pointer_by_logical_index (const List *list, const int ind);
 
 #define List_dump(list, ...)                       \
         List_dump_ (list, LOG_ARGS, __VA_ARGS__)

@@ -15,34 +15,30 @@ int main ()
 
     List list = {};
 
-    if (List_ctor (&list, 5))
+    if (List_ctor (&list))
     {
-        Log_report ("ERRROR: Ctor list in main\n");
+        Log_report ("ERROR: Ctor list in main\n");
         Err_report ();
         return -1;
     }
 
-    List_dump (&list, "FROM MAIN");
+    List_dump (&list, "AFTER CTOR");
 
-    for (int i = 0; i <= 20; i++){
-        List_insert_front (&list, (i+1)*(i+1));
+    for (int i = 0; i <= 5; i++){
+        List_insert_befor_ptr (&list, list.root);
     }
     
     List_dump (&list, "FROM MAIN");
 
-    List_linearize (&list);
-
-    List_dump (&list, "FROM MAIN");
-
-    for (int i = 21; i >= 4; i--){
-        List_erase (&list, i);
+    for (int i = 3; i >= 1; i--){
+        List_erase (&list, Get_pointer_by_logical_index (&list, 1));
     }
 
     List_dump (&list, "FROM MAIN");
 
     if (List_dtor (&list))
     {
-        Log_report ("ERRROR: Dtor list in main\n");
+        Log_report ("ERROR: Dtor list in main\n");
         Err_report ();
         return -1;
     }
