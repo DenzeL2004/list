@@ -376,6 +376,36 @@ static void Print_list_variables (const List *list, FILE *fpout)
 
 //======================================================================================
 
+static void Print_error_value (uint64_t err, FILE *fpout)
+{
+    assert (fpout != nullptr && "fpout is nullptr\n");
+
+    if (err & NEGATIVE_CNT)
+        fprintf (fpout, "cnt_nodes is negative number\n");
+
+    if (err & ROOT_IS_NULLPTR)
+        fprintf (fpout, "root is nullptr\n");        
+
+    if (err & ILLIQUID_HEAD_PTR)
+        fprintf (fpout, "Head pointer is incorrect\n");
+
+    if (err & ILLIQUID_TAIL_PTR)
+        fprintf (fpout, "Tail pointer is incorrect\n");
+
+    #ifdef LIST_DATA_CHECK
+
+        if (err & DATA_NODE_INCORRECT)
+            fprintf (fpout, "Сorrupted not-free nodes\n"); 
+
+    #endif
+
+    fprintf (fpout, "\n\n");
+
+    return;
+}
+
+//======================================================================================
+
 static int List_draw_logical_graph (const List *list)
 {
     assert (list != nullptr && "list is nullptr\n");
