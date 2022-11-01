@@ -17,6 +17,6 @@ const int Poison_ptr  = -126;   //<- Written to a pointer when the list is clear
 
 #define GRAPH_DUMP
 
-#define USE_TYPE "d"            //<- specifier character to print elem
+#define ELEM_T_SPEC "d"            //<- specifier character to print elem
 
 #endif  //endif _LIST_CONFIG_H_

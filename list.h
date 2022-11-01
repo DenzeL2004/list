@@ -8,7 +8,7 @@ const int Identifier_free_node = -1;
 
 const int Dummy_element = 0;
 
-const int Max_comand_buffer = 100;
+const int Max_command_buffer = 100;
 
 struct Node
 {
@@ -117,8 +117,7 @@ int List_insert_back      (List *list, const elem_t val);
 int List_erase (List *list, const int ind);
 
 
-
-int Get_pointer_by_logical_index (const List *list, const int ind);
+int Get_ind_by_logical_order (const List *list, const int ind);
 
 
 /**

@@ -16,7 +16,7 @@ static int List_resize      (List *list);
 
 static int List_recalloc    (List *list, int ver_resize);
 
-static int Init_node (Node *list_elem, elem_t val, int next, int prev);
+static void Init_node (Node *list_elem, elem_t val, int next, int prev);
 
 static int Check_correct_ind (const List *list, const int ind);
 
@@ -29,11 +29,9 @@ static uint64_t Check_list (const List *list);
 
 static int List_draw_logical_graph (const List *list);
 
+static void Print_list_variables (const List *list, FILE *fpout);
 
-static int Cnt_graphs = 0;      //<-To display the current list view
-
-
-#define SHUTDOWN_FUNC(...)                                  \
+#define REPORT(...)                                         \
     {                                                       \
         List_dump (list, __VA_ARGS__);                      \
         Err_report ();                                      \
@@ -97,7 +95,7 @@ int List_dtor (List *list)
 
     if (Check_list (list))
     {
-        SHUTDOWN_FUNC ("ENTRY\nFROM: List_dtor\n");
+        REPORT ("ENTRY\nFROM: List_dtor\n");
         return LIST_DTOR_ERR;
     }
 
@@ -127,7 +125,7 @@ static int Init_list_data (List *list)
 
     if (Check_list (list))
     {
-        SHUTDOWN_FUNC ("ENTRY\nFROM: Init_list_data\n");
+        REPORT ("ENTRY\nFROM: Init_list_data\n");
         return DATA_INIT_ERR;
     }
 
@@ -144,7 +142,7 @@ static int Init_list_data (List *list)
 
     if (Check_list (list))
     {
-        SHUTDOWN_FUNC ("EXIT\nFROM: Init_list_data\n");
+        REPORT ("EXIT\nFROM: Init_list_data\n");
         return DATA_INIT_ERR;
     }
 
@@ -153,7 +151,7 @@ static int Init_list_data (List *list)
 
 //======================================================================================
 
-static int Init_node (Node *list_elem, elem_t val, int next, int prev)
+static void Init_node (Node *list_elem, elem_t val, int next, int prev)
 {
     assert (list_elem != nullptr && "list_elem ptr is nullptr");
 
@@ -161,7 +159,7 @@ static int Init_node (Node *list_elem, elem_t val, int next, int prev)
     list_elem->next = next;
     list_elem->prev = prev; 
 
-    return 0;
+    return;
 }
 
 //======================================================================================
@@ -172,7 +170,7 @@ int List_insert_befor_ind (List *list, const int ind, const elem_t val)
 
     if (Check_list (list))
     {
-        SHUTDOWN_FUNC ("ENTRY\nFROM: List_insert_befor_ind,"
+        REPORT ("ENTRY\nFROM: List_insert_befor_ind,"
                         " ind = %d, val = %d\n", ind, val);
         return LIST_INSERT_ERR;
     }
@@ -231,7 +229,7 @@ int List_insert_befor_ind (List *list, const int ind, const elem_t val)
 
     if (Check_list (list))
     {
-        SHUTDOWN_FUNC ("EXIT\nFROM: List_insert_befor_ind,"
+        REPORT ("EXIT\nFROM: List_insert_befor_ind,"
                         " ind = %d, val = %d\n", ind, val);
         return LIST_INSERT_ERR;
     }
@@ -247,7 +245,7 @@ int List_insert_front (List *list, const elem_t val)
 
     if (Check_list (list))
     {
-        SHUTDOWN_FUNC ("ENTRY\nFROM: List_insert_front %d\n", val);
+        REPORT ("ENTRY\nFROM: List_insert_front %d\n", val);
         return LIST_INSERT_ERR;
     }
     
@@ -284,7 +282,7 @@ int List_insert_front (List *list, const elem_t val)
 
     if (Check_list (list))
     {
-        SHUTDOWN_FUNC ("EXIT\nFROM: List_insert_front %d\n", val);
+        REPORT ("EXIT\nFROM: List_insert_front %d\n", val);
         return LIST_INSERT_ERR;
     }
 
@@ -299,7 +297,7 @@ int List_insert_back (List *list, const elem_t val)
 
     if (Check_list (list))
     {
-        SHUTDOWN_FUNC ("ENTRY\nFROM: List_insert_back %d\n", val);
+        REPORT ("ENTRY\nFROM: List_insert_back %d\n", val);
         return LIST_INSERT_ERR;
     }
 
@@ -332,7 +330,7 @@ int List_insert_back (List *list, const elem_t val)
 
     if (Check_list (list))
     {
-        SHUTDOWN_FUNC ("EXIT\nFROM: List_insert_back %d\n", val);
+        REPORT ("EXIT\nFROM: List_insert_back %d\n", val);
         return LIST_INSERT_ERR;
     }
 
@@ -347,7 +345,7 @@ int List_erase (List *list, const int ind)
 
     if (Check_list (list))
     {
-        SHUTDOWN_FUNC ("ENTRY\nFROM: List_erase, ind = %d\n", ind);
+        REPORT ("ENTRY\nFROM: List_erase, ind = %d\n", ind);
         return LIST_ERASE_ERR;
     }   
     
@@ -399,7 +397,7 @@ int List_erase (List *list, const int ind)
 
     if (Check_list (list))
     {
-        SHUTDOWN_FUNC ("EXIT\nFROM: List_erase exit, ind = %d\n", ind);
+        REPORT ("EXIT\nFROM: List_erase exit, ind = %d\n", ind);
         return LIST_ERASE_ERR;
     }  
 
@@ -414,7 +412,7 @@ static int List_resize (List *list)
 
     if (Check_list (list))
     {
-        SHUTDOWN_FUNC ("ENTRY\nFROM: List_resize\n");
+        REPORT ("ENTRY\nFROM: List_resize\n");
         return LIST_RESIZE_ERR;
     }   
 
@@ -434,7 +432,7 @@ static int List_resize (List *list)
 
     if (Check_list (list))
     {
-        SHUTDOWN_FUNC ("EXIT\nFROM: List_resize\n");
+        REPORT ("EXIT\nFROM: List_resize\n");
         return LIST_RESIZE_ERR;
     }  
 
@@ -449,7 +447,7 @@ static int List_recalloc (List *list, int resize_status)
 
     if (Check_list (list))
     {
-        SHUTDOWN_FUNC ("ENTRY\nFROM: List_recalloc\n");
+        REPORT ("ENTRY\nFROM: List_recalloc\n");
         return LIST_RECALLOC_ERR;
     } 
 
@@ -482,7 +480,7 @@ static int List_recalloc (List *list, int resize_status)
 
     if (Check_list (list))
     {
-        SHUTDOWN_FUNC ("EXIT\nFROM: List_recalloc\n");
+        REPORT ("EXIT\nFROM: List_recalloc\n");
         return LIST_RECALLOC_ERR;
     } 
 
@@ -497,7 +495,7 @@ int List_linearize (List *list)
 
     if (Check_list (list))
     {
-        SHUTDOWN_FUNC ("ENTRY\nFROM: List_linearize\n");
+        REPORT ("ENTRY\nFROM: List_linearize\n");
         return LIST_LINEARIZE_ERR;
     } 
 
@@ -558,7 +556,7 @@ int List_linearize (List *list)
 
     if (Check_list (list))
     {
-        SHUTDOWN_FUNC ("EXIT\nFROM: List_linearize\n");
+        REPORT ("EXIT\nFROM: List_linearize\n");
         return LIST_LINEARIZE_ERR;
     }
 
@@ -567,13 +565,13 @@ int List_linearize (List *list)
 
 //======================================================================================
 
-int Get_pointer_by_logical_index (const List *list, const int ind)
+int Get_ind_by_logical_order (const List *list, const int ind)
 {
     assert (list != nullptr && "list is nullptr\n");
 
     if (Check_list (list))
     {
-        SHUTDOWN_FUNC ("ENTRY\nFROM: Get_pointer_by_logical_index, ind = %d\n", ind);
+        REPORT ("ENTRY\nFROM: Get_ind_by_logical_order, ind = %d\n", ind);
         return GET_LOGICAL_PTR_ERR;
     }   
 
@@ -622,7 +620,7 @@ int List_get_val (const List *list, const int ind)
 
     if (Check_list (list))
     {
-        SHUTDOWN_FUNC ("ENTRY\nFROM: List_get_val, ind = %d\n", ind);
+        REPORT ("ENTRY\nFROM: List_get_val, ind = %d\n", ind);
         return GET_VAL_ERR; 
     }
 
@@ -645,7 +643,7 @@ int List_change_val (const List *list, const int ind, const elem_t val)
 
     if (Check_list (list))
     {
-        SHUTDOWN_FUNC ("ENTRY\nFROM: List_change_val,"
+        REPORT ("ENTRY\nFROM: List_change_val,"
                        " ind = %d, val = %d\n", ind, val);
         return Poison_val; 
     } 
@@ -660,7 +658,7 @@ int List_change_val (const List *list, const int ind, const elem_t val)
 
     if (Check_list (list))
     {
-        SHUTDOWN_FUNC ("EXIT\nFROM: List_change_val,"
+        REPORT ("EXIT\nFROM: List_change_val,"
                        " ind = %d, val = %d\n", ind, val);
         return Poison_val; 
     }
@@ -676,7 +674,7 @@ static int Check_correct_ind (const List *list, const int ind)
 
     if (Check_list (list))
     {
-        SHUTDOWN_FUNC ("ENTRY\nFROM: Check_correct_ind, ind = %d", ind);
+        REPORT ("ENTRY\nFROM: Check_correct_ind, ind = %d", ind);
         return CHECK_IND_ERR; 
     }
 
@@ -787,23 +785,7 @@ int List_dump_ (const List *list,
         fprintf (fp_logs, "\n");
     }
 
-    fprintf (fp_logs, "List pointer to data is |%p|\n\n", (char*) list->data);
-
-    fprintf (fp_logs, "list size_data = %ld\n",      list->size_data);
-    fprintf (fp_logs, "list capacity  = %ld\n",      list->capacity);
-    fprintf (fp_logs, "list cnt_free_nodes = %ld\n", list->cnt_free_nodes);
-
-    fprintf (fp_logs, "\n");
-    
-    fprintf (fp_logs, "list head_ptr = %d\n", list->head_ptr);
-    fprintf (fp_logs, "list tail_ptr = %d\n", list->tail_ptr);
-    fprintf (fp_logs, "list free_ptr = %d\n", list->free_ptr);
-
-    fprintf (fp_logs, "\n");
-
-    fprintf (fp_logs, "list is_linearized = %d\n", list->is_linearized);
-
-    fprintf (fp_logs, "\n\n");
+    Print_list_variables (list, fp_logs);
 
     #ifdef GRAPH_DUMP
 
@@ -834,6 +816,35 @@ int List_dump_ (const List *list,
     fprintf (fp_logs, "==========================================================\n\n");
 
     return 0;
+}
+
+
+//======================================================================================
+
+static void Print_list_variables (const List *list, FILE *fpout)
+{
+    assert (list  != nullptr &&  "list is nullptr\n");
+    assert (fpout != nullptr && "fpout is nullptr\n");
+
+    fprintf (fpout, "<body>\n");
+    fprintf (fpout, "<table border=\"1\">\n");
+    
+    fprintf (fpout, "<tr><td> data pointer </td> <td> %p </td></tr>", (char*) list->data);
+
+    fprintf (fpout, "<tr><td> size data </td> <td>  %ld </td></tr>",  list->size_data);
+    fprintf (fpout, "<tr><td> capacity </td> <td> %ld </td></tr>",    list->capacity);
+    fprintf (fpout, "<tr><td>cnt free nodes</td><td> %ld </td></tr>", list->cnt_free_nodes);
+
+    fprintf (fpout, "<tr><td> head pointer </td> <td>  %d </td></tr>",  list->head_ptr);
+    fprintf (fpout, "<tr><td> tail pointer </td> <td>  %d </td></tr>",  list->tail_ptr);
+    fprintf (fpout, "<tr><td> free pointer </td> <td>  %d </td></tr>",  list->free_ptr);
+
+    fprintf (fpout, "<tr><td> is_linearized </td> <td>  %d </td></tr>",  list->is_linearized);
+
+    fprintf (fpout, "</table>\n");
+    fprintf (fpout, "</body>\n");
+   
+    return;
 }
 
 //======================================================================================
@@ -872,6 +883,8 @@ static int List_draw_logical_graph (const List *list)
         fprintf (graph, "node_free -> node%d\n", list->free_ptr);
     }
 
+    static int Cnt_graphs = 0;      //<-To display the current list view
+
     for (int counter = 0; counter <= list->capacity; counter++) 
     {
         int next = list->data[counter].next;
@@ -905,7 +918,7 @@ static int List_draw_logical_graph (const List *list)
     fprintf(graph, "}\n}\n");
     fclose(graph);
 
-    char command_buffer[Max_comand_buffer] = {0};
+    char command_buffer[Max_command_buffer] = {0};
     sprintf(command_buffer, "dot -Tpng graph_img/graph.txt -o graph_img/picture%d.png", Cnt_graphs);
 
     if (system(command_buffer))
